@@ -7,14 +7,12 @@ const ADMIN_PREFIX = "/admin";
 const CLIENTE_PREFIX = "/cliente";
 const NOME_COOKIE_SESSAO = "session";
 
-// Payload esperado do JWT emitido no login (ver src/lib/auth.ts):
-// { sub: usuarioId, role: "admin" | "cliente" }
 type PayloadSessao = {
   sub: string;
   role: "admin" | "cliente";
 };
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   const isAdminRoute = pathname.startsWith(ADMIN_PREFIX);
