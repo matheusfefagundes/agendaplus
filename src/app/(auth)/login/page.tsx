@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowRight, Eye, EyeOff, Lock, Mail } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { AuthLayout } from "@/components/auth/AuthLayout";
@@ -13,10 +14,12 @@ type FieldName = "email" | "password";
 const REQUIRED_FIELDS: FieldName[] = ["email", "password"];
 
 export default function LoginPage() {
-  const [showPassword, setShowPassword] = useState(false);
+  const router = useRouter();
+  const [mostrarSenha, setMostrarSenha] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<FieldName, boolean>>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     const formData = new FormData(event.currentTarget);
@@ -34,6 +37,32 @@ export default function LoginPage() {
     if (Object.keys(nextErrors).length > 0) {
       toast.danger("Preencha todos os campos obrigatórios.");
       return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: formData.get("email"),
+          senha: formData.get("password"),
+        }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        toast.danger(data.error ?? "Não foi possível entrar.");
+        return;
+      }
+
+      router.push(data.role === "admin" ? "/admin" : "/cliente");
+      router.refresh();
+    } catch {
+      toast.danger("Erro de conexão. Tente novamente.");
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -81,7 +110,7 @@ export default function LoginPage() {
         <TextField
           id="password"
           name="password"
-          type={showPassword ? "text" : "password"}
+          type={mostrarSenha ? "text" : "password"}
           label="Senha"
           placeholder="••••••••"
           autoComplete="current-password"
@@ -100,17 +129,17 @@ export default function LoginPage() {
           rightSlot={
             <button
               type="button"
-              onClick={() => setShowPassword((prev) => !prev)}
-              aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+              onClick={() => setMostrarSenha((prev) => !prev)}
+              aria-label={mostrarSenha ? "Ocultar senha" : "Mostrar senha"}
               className="flex items-center justify-center text-ink-muted"
             >
-              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              {mostrarSenha ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
           }
         />
 
-        <Button type="submit" className="mt-2">
-          Entrar
+        <Button type="submit" className="mt-2" disabled={isSubmitting}>
+          {isSubmitting ? "Entrando..." : "Entrar"}
         </Button>
       </form>
     </AuthLayout>

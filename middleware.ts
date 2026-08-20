@@ -5,12 +5,12 @@ const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET);
 
 const ADMIN_PREFIX = "/admin";
 const CLIENTE_PREFIX = "/cliente";
+const NOME_COOKIE_SESSAO = "session";
 
-// Payload esperado do JWT emitido no login (ver src/services de auth):
-// { sub: usuarioId, clinicaId, role: "admin" | "cliente" }
-type SessionPayload = {
+// Payload esperado do JWT emitido no login (ver src/lib/auth.ts):
+// { sub: usuarioId, role: "admin" | "cliente" }
+type PayloadSessao = {
   sub: string;
-  clinicaId: string;
   role: "admin" | "cliente";
 };
 
@@ -23,14 +23,14 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const token = request.cookies.get("session")?.value;
+  const token = request.cookies.get(NOME_COOKIE_SESSAO)?.value;
   if (!token) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
   try {
     const { payload } = await jwtVerify(token, JWT_SECRET);
-    const { role } = payload as unknown as SessionPayload;
+    const { role } = payload as unknown as PayloadSessao;
 
     if (isAdminRoute && role !== "admin") {
       return NextResponse.redirect(new URL("/", request.url));
@@ -39,10 +39,6 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL("/", request.url));
     }
 
-    // clinicaId do token fica disponível aqui para, futuramente, validar
-    // contra o slug da clínica na URL (ex: /c/[slug]/admin/...) antes de
-    // liberar o acesso — hoje o isolamento por clínica ainda depende dos
-    // services filtrarem sempre por clinica_id nas queries.
     return NextResponse.next();
   } catch {
     return NextResponse.redirect(new URL("/login", request.url));

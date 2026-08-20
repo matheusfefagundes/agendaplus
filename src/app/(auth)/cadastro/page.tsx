@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowRight, Eye, EyeOff, Lock, Mail, User } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { AuthLayout } from "@/components/auth/AuthLayout";
@@ -13,12 +14,15 @@ type FieldName = "name" | "email" | "password" | "confirmPassword";
 const REQUIRED_FIELDS: FieldName[] = ["name", "email", "password", "confirmPassword"];
 
 export default function CadastroPage() {
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const router = useRouter();
+  const [mostrarSenha, setMostrarSenha] = useState(false);
+  const [mostrarConfirmarSenha, setMostrarConfirmarSenha] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<FieldName, boolean>>>({});
   const [passwordMismatch, setPasswordMismatch] = useState(false);
+  const [senhaCurta, setSenhaCurta] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     const formData = new FormData(event.currentTarget);
@@ -33,6 +37,12 @@ export default function CadastroPage() {
       }
     }
 
+    const senha = formData.get("password");
+    const isSenhaCurta = !nextErrors.password && typeof senha === "string" && senha.length < 8;
+    if (isSenhaCurta) {
+      nextErrors.password = true;
+    }
+
     const senhaDiferente =
       !nextErrors.password &&
       !nextErrors.confirmPassword &&
@@ -43,6 +53,7 @@ export default function CadastroPage() {
     }
 
     setErrors(nextErrors);
+    setSenhaCurta(isSenhaCurta);
     setPasswordMismatch(senhaDiferente);
 
     if (campoFaltando) {
@@ -50,9 +61,42 @@ export default function CadastroPage() {
       return;
     }
 
+    if (isSenhaCurta) {
+      toast.danger("A senha precisa ter pelo menos 8 caracteres.");
+      return;
+    }
+
     if (senhaDiferente) {
       toast.danger("As senhas não coincidem.");
       return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nome: formData.get("name"),
+          email: formData.get("email"),
+          senha: formData.get("password"),
+        }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        toast.danger(data.error ?? "Não foi possível concluir o cadastro.");
+        return;
+      }
+
+      toast.success("Cadastro realizado com sucesso!");
+      router.push("/cliente");
+      router.refresh();
+    } catch {
+      toast.danger("Erro de conexão. Tente novamente.");
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -67,6 +111,7 @@ export default function CadastroPage() {
 
   function handlePasswordChange() {
     limparErro("password");
+    setSenhaCurta(false);
     if (passwordMismatch) {
       setPasswordMismatch(false);
       limparErro("confirmPassword");
@@ -119,22 +164,23 @@ export default function CadastroPage() {
         <TextField
           id="password"
           name="password"
-          type={showPassword ? "text" : "password"}
+          type={mostrarSenha ? "text" : "password"}
           label="Senha"
           placeholder="••••••••"
           autoComplete="new-password"
           required
           icon={<Lock size={18} />}
           error={errors.password}
+          errorMessage={senhaCurta ? "A senha precisa ter pelo menos 8 caracteres." : undefined}
           onChange={handlePasswordChange}
           rightSlot={
             <button
               type="button"
-              onClick={() => setShowPassword((prev) => !prev)}
-              aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+              onClick={() => setMostrarSenha((prev) => !prev)}
+              aria-label={mostrarSenha ? "Ocultar senha" : "Mostrar senha"}
               className="flex items-center justify-center text-ink-muted"
             >
-              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              {mostrarSenha ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
           }
         />
@@ -142,7 +188,7 @@ export default function CadastroPage() {
         <TextField
           id="confirm-password"
           name="confirmPassword"
-          type={showConfirmPassword ? "text" : "password"}
+          type={mostrarConfirmarSenha ? "text" : "password"}
           label="Confirme sua Senha"
           placeholder="••••••••"
           autoComplete="new-password"
@@ -154,17 +200,17 @@ export default function CadastroPage() {
           rightSlot={
             <button
               type="button"
-              onClick={() => setShowConfirmPassword((prev) => !prev)}
-              aria-label={showConfirmPassword ? "Ocultar senha" : "Mostrar senha"}
+              onClick={() => setMostrarConfirmarSenha((prev) => !prev)}
+              aria-label={mostrarConfirmarSenha ? "Ocultar senha" : "Mostrar senha"}
               className="flex items-center justify-center text-ink-muted"
             >
-              {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              {mostrarConfirmarSenha ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
           }
         />
 
-        <Button type="submit" className="mt-2">
-          Cadastrar-se
+        <Button type="submit" className="mt-2" disabled={isSubmitting}>
+          {isSubmitting ? "Cadastrando..." : "Cadastrar-se"}
         </Button>
       </form>
     </AuthLayout>
