@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [main, development]
+  pull_request:
+    branches: [main, development]
+
+jobs:
+  lint-typecheck-build:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql://agendaplus:agendaplus@localhost:5432/agendaplus
+      JWT_SECRET: ci-dummy-secret
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run build
+
+  migrations:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: agendaplus
+          POSTGRES_PASSWORD: agendaplus
+          POSTGRES_DB: agendaplus
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U agendaplus"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://agendaplus:agendaplus@localhost:5432/agendaplus
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+
+      - run: npm ci
+      - name: Apply migrations
+        run: npm run db:migrate:up
+      - name: Roll back migrations (checks reversibility)
+        run: npm run db:migrate:down
