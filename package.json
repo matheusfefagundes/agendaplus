@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "next typegen && tsc --noEmit",
     "db:migrate:up": "node-pg-migrate up -m src/db/migrations",
     "db:migrate:down": "node-pg-migrate down -m src/db/migrations",
     "db:migrate:create": "node-pg-migrate create -m src/db/migrations --",

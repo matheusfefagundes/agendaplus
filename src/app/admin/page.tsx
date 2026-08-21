@@ -5,25 +5,13 @@ import {
   obterProximosAgendamentos,
   obterResumoDashboard,
 } from "@/services/dashboard.service";
+import { formatarHorario, formatarMoeda } from "@/utils/formatters";
 
 function saudacao(): string {
   const hora = new Date().getHours();
   if (hora < 12) return "Bom dia";
   if (hora < 18) return "Boa tarde";
   return "Boa noite";
-}
-
-function formatarMoeda(valor: number): string {
-  return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
-
-function formatarHorario(iso: string): string {
-  return new Date(iso).toLocaleString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
 }
 
 export default async function AdminDashboardPage() {
@@ -39,7 +27,7 @@ export default async function AdminDashboardPage() {
   return (
     <div className="flex flex-col gap-8">
       <header>
-        <h1 className="text-3xl font-extrabold tracking-tight text-ink">
+        <h1 className="text-2xl font-extrabold tracking-tight text-ink sm:text-3xl">
           {saudacao()}
           {primeiroNome ? `, ${primeiroNome}.` : "."}
         </h1>

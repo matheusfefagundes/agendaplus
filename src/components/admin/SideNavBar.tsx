@@ -3,7 +3,17 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { CalendarDays, LayoutDashboard, LogOut, Settings, Sparkles, Users } from "lucide-react";
+import { useState } from "react";
+import {
+  CalendarDays,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  Settings,
+  Sparkles,
+  Users,
+  X,
+} from "lucide-react";
 
 const ITENS_NAVEGACAO = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
@@ -16,6 +26,7 @@ const ITENS_NAVEGACAO = [
 export function SideNavBar() {
   const pathname = usePathname();
   const router = useRouter();
+  const [menuAberto, setMenuAberto] = useState(false);
 
   async function sair() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -23,8 +34,8 @@ export function SideNavBar() {
     router.refresh();
   }
 
-  return (
-    <aside className="flex h-screen w-64 shrink-0 flex-col justify-between border-r border-input-border bg-cream-dark px-4 py-6">
+  const conteudoNav = (
+    <>
       <div className="flex flex-col gap-8">
         <div className="flex items-center gap-3 px-2">
           <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-cream drop-shadow-[0px_1px_1px_rgba(0,0,0,0.05)]">
@@ -40,6 +51,7 @@ export function SideNavBar() {
               <Link
                 key={href}
                 href={href}
+                onClick={() => setMenuAberto(false)}
                 className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition-colors ${
                   ativo ? "bg-brand text-white" : "text-ink hover:bg-cream"
                 }`}
@@ -60,6 +72,55 @@ export function SideNavBar() {
         <LogOut size={18} />
         Sair
       </button>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* Barra superior — só em telas pequenas */}
+      <header className="flex items-center justify-between border-b border-input-border bg-cream-dark px-4 py-3 lg:hidden">
+        <div className="flex items-center gap-2">
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-cream">
+            <Image src="/icons/logo-leaf.svg" alt="" width={15} height={15} />
+          </div>
+          <span className="text-lg font-extrabold tracking-tight text-brand">Agenda+</span>
+        </div>
+        <button
+          type="button"
+          onClick={() => setMenuAberto(true)}
+          aria-label="Abrir menu"
+          className="p-1 text-ink"
+        >
+          <Menu size={24} />
+        </button>
+      </header>
+
+      {/* Menu em drawer — só em telas pequenas */}
+      {menuAberto && (
+        <div className="fixed inset-0 z-50 flex lg:hidden">
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setMenuAberto(false)}
+            aria-hidden="true"
+          />
+          <aside className="relative flex h-full w-72 max-w-[80vw] flex-col justify-between bg-cream-dark px-4 py-6">
+            <button
+              type="button"
+              onClick={() => setMenuAberto(false)}
+              aria-label="Fechar menu"
+              className="absolute right-4 top-4 p-1 text-ink-muted"
+            >
+              <X size={22} />
+            </button>
+            {conteudoNav}
+          </aside>
+        </div>
+      )}
+
+      {/* Sidebar fixa — só em telas grandes */}
+      <aside className="hidden h-screen w-64 shrink-0 flex-col justify-between border-r border-input-border bg-cream-dark px-4 py-6 lg:flex">
+        {conteudoNav}
+      </aside>
+    </>
   );
 }
