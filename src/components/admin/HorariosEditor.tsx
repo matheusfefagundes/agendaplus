@@ -5,6 +5,7 @@ import { useState, type FormEvent } from "react";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { useMutacaoApi } from "@/hooks/useMutacaoApi";
 import { formatarHoraCurta } from "@/utils/formatters";
 import type { Horario } from "@/types/horario";
@@ -18,8 +19,9 @@ type HorariosEditorProps = {
 export function HorariosEditor({ horarios }: HorariosEditorProps) {
   const router = useRouter();
   const [horarioEditando, setHorarioEditando] = useState<Horario | null>(null);
+  const [horarioParaExcluir, setHorarioParaExcluir] = useState<Horario | null>(null);
   const { enviando, executar: executarCriar } = useMutacaoApi();
-  const { executar: executarRemover } = useMutacaoApi();
+  const { enviando: excluindo, executar: executarRemover } = useMutacaoApi();
   const { executar: executarAlternar } = useMutacaoApi();
   const { enviando: salvandoEdicao, executar: executarEditar } = useMutacaoApi();
 
@@ -82,11 +84,15 @@ export function HorariosEditor({ horarios }: HorariosEditorProps) {
     );
   }
 
-  async function remover(id: string) {
-    await executarRemover(() => fetch(`/api/horarios/${id}`, { method: "DELETE" }), {
+  async function confirmarRemocao() {
+    if (!horarioParaExcluir) return;
+    await executarRemover(() => fetch(`/api/horarios/${horarioParaExcluir.id}`, { method: "DELETE" }), {
       mensagemSucesso: "Horário removido.",
       mensagemErroPadrao: "Não foi possível remover.",
-      aoSucesso: () => router.refresh(),
+      aoSucesso: () => {
+        setHorarioParaExcluir(null);
+        router.refresh();
+      },
     });
   }
 
@@ -112,7 +118,7 @@ export function HorariosEditor({ horarios }: HorariosEditorProps) {
       {horarios.length === 0 ? (
         <p className="text-sm text-ink-muted">Nenhuma janela de atendimento cadastrada ainda.</p>
       ) : (
-        <ul className="flex flex-col gap-2">
+        <ul className="flex max-h-96 flex-col gap-2 overflow-y-auto pr-1">
           {horarios.map((horario) => (
             <li
               key={horario.id}
@@ -145,7 +151,7 @@ export function HorariosEditor({ horarios }: HorariosEditorProps) {
                 </button>
                 <button
                   type="button"
-                  onClick={() => remover(horario.id)}
+                  onClick={() => setHorarioParaExcluir(horario)}
                   aria-label="Remover horário"
                   className="p-1 text-ink-muted hover:text-danger"
                 >
@@ -157,7 +163,10 @@ export function HorariosEditor({ horarios }: HorariosEditorProps) {
         </ul>
       )}
 
-      <form onSubmit={handleSubmit} className="mt-2 flex flex-col gap-3 border-t border-input-border pt-4">
+      <form
+        onSubmit={handleSubmit}
+        className="mt-2 flex shrink-0 flex-col gap-3 border-t border-input-border pt-4"
+      >
         <select
           name="diaSemana"
           required
@@ -241,6 +250,22 @@ export function HorariosEditor({ horarios }: HorariosEditorProps) {
           </form>
         )}
       </Modal>
+
+      <ConfirmModal
+        open={horarioParaExcluir !== null}
+        title="Remover horário"
+        message={
+          horarioParaExcluir
+            ? `Remover a janela de ${DIAS_SEMANA[horarioParaExcluir.diaSemana]} (${formatarHoraCurta(
+                horarioParaExcluir.horaInicio,
+              )} – ${formatarHoraCurta(horarioParaExcluir.horaFim)})? Essa ação não pode ser desfeita.`
+            : ""
+        }
+        confirmLabel="Remover"
+        confirming={excluindo}
+        onConfirm={confirmarRemocao}
+        onCancel={() => setHorarioParaExcluir(null)}
+      />
     </div>
   );
 }
