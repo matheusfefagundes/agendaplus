@@ -8,6 +8,7 @@ type ConfirmModalProps = {
   title: string;
   message: string;
   confirmLabel?: string;
+  confirmingLabel?: string;
   cancelLabel?: string;
   confirming?: boolean;
   onConfirm: () => void;
@@ -19,6 +20,7 @@ export function ConfirmModal({
   title,
   message,
   confirmLabel = "Confirmar",
+  confirmingLabel = "Excluindo...",
   cancelLabel = "Cancelar",
   confirming = false,
   onConfirm,
@@ -43,7 +45,7 @@ export function ConfirmModal({
           onClick={onConfirm}
           className="sm:w-auto"
         >
-          {confirming ? "Excluindo..." : confirmLabel}
+          {confirming ? confirmingLabel : confirmLabel}
         </Button>
       </div>
     </Modal>

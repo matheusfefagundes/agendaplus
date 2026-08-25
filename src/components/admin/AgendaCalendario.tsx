@@ -6,7 +6,13 @@ import { CalendarDays, ChevronLeft, ChevronRight, Clock } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { useMutacaoApi } from "@/hooks/useMutacaoApi";
-import { adicionarDias, dataLocalBrasil, minutosDeHoraTexto, minutosDoDiaBrasil } from "@/utils/data";
+import {
+  adicionarDias,
+  dataLocalBrasil,
+  formatarHoraDeMinutos,
+  minutosDeHoraTexto,
+  minutosDoDiaBrasil,
+} from "@/utils/data";
 import { formatarHorario } from "@/utils/formatters";
 import type { AgendamentoDetalhe, StatusAgendamento } from "@/types/agendamento";
 import type { Horario } from "@/types/horario";
@@ -24,12 +30,6 @@ type AgendaCalendarioProps = {
   agendamentos: AgendamentoDetalhe[];
   horarios: Horario[];
 };
-
-function formatarHoraLabel(minutos: number): string {
-  const h = String(Math.floor(minutos / 60)).padStart(2, "0");
-  const m = String(minutos % 60).padStart(2, "0");
-  return `${h}:${m}`;
-}
 
 const ESTILO_STATUS: Record<
   StatusAgendamento,
@@ -287,7 +287,7 @@ export function AgendaCalendario({ domingo, hoje, agendamentos, horarios }: Agen
                   className="absolute right-2 -translate-y-1/2 text-sm text-ink-muted"
                   style={{ top: (minutos - minInicioMin) * ALTURA_POR_MINUTO }}
                 >
-                  {formatarHoraLabel(minutos)}
+                  {formatarHoraDeMinutos(minutos)}
                 </span>
               ))}
             </div>

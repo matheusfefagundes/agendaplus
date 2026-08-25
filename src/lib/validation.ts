@@ -85,3 +85,16 @@ export const agendamentoStatusSchema = z
     status: z.enum(["pendente", "confirmado", "cancelado", "concluido"]),
   })
   .strict();
+
+const DATA_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+const HORARIO_REGEX = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+export const novoAgendamentoSchema = z
+  .object({
+    clienteId: z.string().uuid("Cliente inválido."),
+    servicoId: z.string().uuid("Serviço inválido."),
+    data: z.string().regex(DATA_REGEX, "Informe uma data válida."),
+    horario: z.string().regex(HORARIO_REGEX, "Informe um horário válido."),
+    observacoes: z.string().trim().max(2000).nullable().optional(),
+  })
+  .strict();

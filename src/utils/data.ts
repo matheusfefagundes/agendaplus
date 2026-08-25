@@ -53,3 +53,14 @@ export function formatarDataCurta(dataISO: string): string {
   const [, mes, dia] = dataISO.split("-");
   return `${dia}/${mes}`;
 }
+
+export function formatarHoraDeMinutos(minutos: number): string {
+  const h = String(Math.floor(minutos / 60)).padStart(2, "0");
+  const m = String(minutos % 60).padStart(2, "0");
+  return `${h}:${m}`;
+}
+
+export function diaDaSemana(dataISO: string): number {
+  const [ano, mes, dia] = dataISO.split("-").map(Number);
+  return new Date(Date.UTC(ano, mes - 1, dia)).getUTCDay();
+}

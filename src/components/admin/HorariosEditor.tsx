@@ -6,6 +6,7 @@ import { Pencil, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { Select } from "@/components/ui/Select";
 import { useMutacaoApi } from "@/hooks/useMutacaoApi";
 import { formatarHoraCurta } from "@/utils/formatters";
 import type { Horario } from "@/types/horario";
@@ -18,6 +19,7 @@ type HorariosEditorProps = {
 
 export function HorariosEditor({ horarios }: HorariosEditorProps) {
   const router = useRouter();
+  const [diaSemana, setDiaSemana] = useState("");
   const [horarioEditando, setHorarioEditando] = useState<Horario | null>(null);
   const [horarioParaExcluir, setHorarioParaExcluir] = useState<Horario | null>(null);
   const { enviando, executar: executarCriar } = useMutacaoApi();
@@ -31,7 +33,7 @@ export function HorariosEditor({ horarios }: HorariosEditorProps) {
     const formData = new FormData(form);
 
     const payload = {
-      diaSemana: Number(formData.get("diaSemana")),
+      diaSemana: Number(diaSemana),
       horaInicio: String(formData.get("horaInicio")),
       horaFim: String(formData.get("horaFim")),
       intervaloMinutos: Number(formData.get("intervaloMinutos") || 0),
@@ -49,6 +51,7 @@ export function HorariosEditor({ horarios }: HorariosEditorProps) {
         mensagemErroPadrao: "Não foi possível salvar o horário.",
         aoSucesso: () => {
           form.reset();
+          setDiaSemana("");
           router.refresh();
         },
       },
@@ -167,21 +170,12 @@ export function HorariosEditor({ horarios }: HorariosEditorProps) {
         onSubmit={handleSubmit}
         className="mt-2 flex shrink-0 flex-col gap-3 border-t border-input-border pt-4"
       >
-        <select
-          name="diaSemana"
-          required
-          defaultValue=""
-          className="w-full rounded-3xl border border-input-border bg-input px-4 py-3 text-ink"
-        >
-          <option value="" disabled>
-            Dia da semana
-          </option>
-          {DIAS_SEMANA.map((dia, index) => (
-            <option key={dia} value={index}>
-              {dia}
-            </option>
-          ))}
-        </select>
+        <Select
+          placeholder="Dia da semana"
+          value={diaSemana}
+          onChange={setDiaSemana}
+          options={DIAS_SEMANA.map((dia, index) => ({ value: String(index), label: dia }))}
+        />
         <div className="grid grid-cols-2 gap-3">
           <input
             type="time"
@@ -205,7 +199,7 @@ export function HorariosEditor({ horarios }: HorariosEditorProps) {
           placeholder="Intervalo entre sessões (min)"
           className="w-full rounded-3xl border border-input-border bg-input px-4 py-3 text-ink placeholder:text-ink-muted"
         />
-        <Button type="submit" size="sm" disabled={enviando} className="sm:w-auto">
+        <Button type="submit" size="sm" disabled={!diaSemana || enviando} className="sm:w-auto">
           <Plus size={18} />
           {enviando ? "Adicionando..." : "Adicionar janela"}
         </Button>

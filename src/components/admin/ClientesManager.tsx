@@ -1,28 +1,35 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useMemo, useState, type FormEvent } from "react";
-import { ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { useMemo, useState, type ChangeEvent, type FormEvent } from "react";
+import { CalendarPlus, ChevronLeft, ChevronRight, MessageCircle, Search } from "lucide-react";
 import { TextField } from "@/components/ui/TextField";
 import { Textarea } from "@/components/ui/Textarea";
 import { Button } from "@/components/ui/Button";
+import { AgendarModal } from "@/components/admin/AgendarModal";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { useMutacaoApi } from "@/hooks/useMutacaoApi";
+import { linkWhatsapp, mascararTelefone, somenteDigitos } from "@/utils/telefone";
 import type { ClienteDetalhe } from "@/types/cliente";
+import type { Servico } from "@/types/servico";
 
 const CLIENTES_POR_PAGINA = 10;
 
 type ClientesManagerProps = {
   clientes: ClienteDetalhe[];
+  servicos: Servico[];
 };
 
-export function ClientesManager({ clientes }: ClientesManagerProps) {
+export function ClientesManager({ clientes, servicos }: ClientesManagerProps) {
   const router = useRouter();
   const [busca, setBusca] = useState("");
   const [buscaAnterior, setBuscaAnterior] = useState(busca);
   const [pagina, setPagina] = useState(1);
   const [selecionadoId, setSelecionadoId] = useState<string | null>(clientes[0]?.id ?? null);
+  const [agendarAberto, setAgendarAberto] = useState(false);
+  const [confirmarDesativar, setConfirmarDesativar] = useState(false);
   const { enviando, executar: executarSalvar } = useMutacaoApi();
-  const { executar: executarAlternar } = useMutacaoApi();
+  const { enviando: desativando, executar: executarAlternar } = useMutacaoApi();
 
   const filtrados = useMemo(() => {
     const termo = busca.trim().toLowerCase();
@@ -55,7 +62,7 @@ export function ClientesManager({ clientes }: ClientesManagerProps) {
     const formData = new FormData(event.currentTarget);
 
     const payload = {
-      telefone: String(formData.get("telefone") ?? "").trim() || null,
+      telefone: somenteDigitos(String(formData.get("telefone") ?? "")) || null,
       observacoesClinicas: String(formData.get("observacoesClinicas") ?? "").trim() || null,
     };
 
@@ -74,6 +81,10 @@ export function ClientesManager({ clientes }: ClientesManagerProps) {
     );
   }
 
+  function handleTelefoneChange(event: ChangeEvent<HTMLInputElement>) {
+    event.target.value = mascararTelefone(event.target.value);
+  }
+
   async function alternarAtivo() {
     if (!selecionado) return;
     await executarAlternar(
@@ -86,9 +97,20 @@ export function ClientesManager({ clientes }: ClientesManagerProps) {
       {
         mensagemSucesso: selecionado.ativo ? "Cliente desativado." : "Cliente reativado.",
         mensagemErroPadrao: "Não foi possível atualizar.",
-        aoSucesso: () => router.refresh(),
+        aoSucesso: () => {
+          setConfirmarDesativar(false);
+          router.refresh();
+        },
       },
     );
+  }
+
+  function aoClicarAlternarAtivo() {
+    if (selecionado?.ativo) {
+      setConfirmarDesativar(true);
+      return;
+    }
+    alternarAtivo();
   }
 
   return (
@@ -183,18 +205,53 @@ export function ClientesManager({ clientes }: ClientesManagerProps) {
                 </div>
                 <button
                   type="button"
-                  onClick={alternarAtivo}
+                  onClick={aoClicarAlternarAtivo}
                   className="shrink-0 rounded-full border border-input-border px-4 py-1.5 text-sm font-medium text-ink hover:bg-cream"
                 >
                   {selecionado.ativo ? "Desativar" : "Reativar"}
                 </button>
               </div>
 
+              <div className="flex gap-3">
+                <Button
+                  type="button"
+                  size="sm"
+                  className="flex-1"
+                  onClick={() => setAgendarAberto(true)}
+                >
+                  <CalendarPlus size={16} />
+                  Agendar
+                </Button>
+                {linkWhatsapp(selecionado.telefone) ? (
+                  <a
+                    href={linkWhatsapp(selecionado.telefone) ?? undefined}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex flex-1 items-center justify-center gap-2 rounded-full bg-input px-5 py-2 text-sm font-semibold text-brand transition-opacity hover:opacity-90"
+                  >
+                    <MessageCircle size={16} />
+                    Mensagem
+                  </a>
+                ) : (
+                  <button
+                    type="button"
+                    disabled
+                    title="Cadastre um telefone para enviar mensagem"
+                    className="flex flex-1 items-center justify-center gap-2 rounded-full bg-input px-5 py-2 text-sm font-semibold text-ink-muted opacity-60"
+                  >
+                    <MessageCircle size={16} />
+                    Mensagem
+                  </button>
+                )}
+              </div>
+
               <TextField
                 id="telefone"
                 name="telefone"
                 label="Telefone"
-                defaultValue={selecionado.telefone ?? ""}
+                placeholder="(11) 99999-9999"
+                defaultValue={mascararTelefone(selecionado.telefone ?? "")}
+                onChange={handleTelefoneChange}
               />
               <Textarea
                 id="observacoesClinicas"
@@ -211,6 +268,31 @@ export function ClientesManager({ clientes }: ClientesManagerProps) {
           )}
         </div>
       </div>
+
+      {selecionado && (
+        <AgendarModal
+          open={agendarAberto}
+          onClose={() => setAgendarAberto(false)}
+          clienteId={selecionado.id}
+          clienteNome={selecionado.nome}
+          servicos={servicos}
+        />
+      )}
+
+      <ConfirmModal
+        open={confirmarDesativar}
+        title="Desativar cliente"
+        message={
+          selecionado
+            ? `Tem certeza que deseja desativar "${selecionado.nome}"? Ele não poderá mais acessar a conta até ser reativado.`
+            : ""
+        }
+        confirmLabel="Desativar"
+        confirmingLabel="Desativando..."
+        confirming={desativando}
+        onConfirm={alternarAtivo}
+        onCancel={() => setConfirmarDesativar(false)}
+      />
     </div>
   );
 }
