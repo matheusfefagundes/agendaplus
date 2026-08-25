@@ -20,6 +20,14 @@
   --color-danger-bg: #fdecec;
   --color-info: #4f7fd1;
   --color-info-bg: #eaf1fb;
+
+  /* Tokens específicos da Agenda Interativa (Figma) */
+  --color-confirmado: #65528a;
+  --color-confirmado-bg: #ebddff;
+  --color-confirmado-text: #4f3d73;
+  --color-cancelado-tom-bg: rgba(225, 194, 153, 0.4);
+  --color-cancelado-tom-border: rgba(225, 194, 153, 0.6);
+  --color-cancelado-tom-text: #584324;
 }
 
 @theme inline {
@@ -40,6 +48,12 @@
   --color-danger-bg: var(--color-danger-bg);
   --color-info: var(--color-info);
   --color-info-bg: var(--color-info-bg);
+  --color-confirmado: var(--color-confirmado);
+  --color-confirmado-bg: var(--color-confirmado-bg);
+  --color-confirmado-text: var(--color-confirmado-text);
+  --color-cancelado-tom-bg: var(--color-cancelado-tom-bg);
+  --color-cancelado-tom-border: var(--color-cancelado-tom-border);
+  --color-cancelado-tom-text: var(--color-cancelado-tom-text);
   --font-sans: var(--font-manrope);
 }
 

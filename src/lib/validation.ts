@@ -79,3 +79,9 @@ export const horarioUpdateSchema = z
     ativo: z.boolean().optional(),
   })
   .strict();
+
+export const agendamentoStatusSchema = z
+  .object({
+    status: z.enum(["pendente", "confirmado", "cancelado", "concluido"]),
+  })
+  .strict();
