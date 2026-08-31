@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { Check, ChevronLeft, ChevronRight, Moon, Sun, Sunset } from "lucide-react";
 import { Select } from "@/components/ui/Select";
+import { Tooltip } from "@/components/ui/Tooltip";
 import { useMutacaoApi } from "@/hooks/useMutacaoApi";
 import { formatarDataExtensa, hojeEmSaoPauloISO } from "@/utils/data";
 import { formatarMoeda } from "@/utils/formatters";
@@ -184,22 +185,39 @@ export function NovoAgendamentoForm({ servicos }: NovoAgendamentoFormProps) {
                 const iso = paraISO(mesVisivel.ano, mesVisivel.mes, dia);
                 const desabilitado = iso < hojeISO;
                 const selecionado = iso === data;
-                return (
+                const ehHoje = iso === hojeISO;
+
+                const botao = (
                   <button
-                    key={iso}
                     type="button"
                     disabled={desabilitado}
                     onClick={() => selecionarDia(dia)}
-                    className={`aspect-square rounded-2xl text-sm font-medium transition-colors ${
+                    className={`flex h-full w-full items-center justify-center rounded-2xl text-sm font-medium transition-colors ${
                       selecionado
                         ? "bg-brand font-bold text-white shadow-[0px_10px_15px_-3px_rgba(101,82,138,0.2)]"
                         : desabilitado
                           ? "cursor-not-allowed text-ink-muted/40"
-                          : "text-ink hover:bg-input"
+                          : ehHoje
+                            ? "border border-brand text-brand hover:bg-input"
+                            : "text-ink hover:bg-input"
                     }`}
                   >
                     {dia}
                   </button>
+                );
+
+                if (ehHoje) {
+                  return (
+                    <Tooltip key={iso} content="Hoje" className="aspect-square w-full">
+                      {botao}
+                    </Tooltip>
+                  );
+                }
+
+                return (
+                  <span key={iso} className="aspect-square w-full">
+                    {botao}
+                  </span>
                 );
               })}
             </div>
