@@ -47,6 +47,11 @@ export async function obterClientePorId(id: string): Promise<ClienteDetalhe | nu
   return result.rows[0] ? mapRow(result.rows[0]) : null;
 }
 
+export async function obterClientePorUsuarioId(usuarioId: string): Promise<ClienteDetalhe | null> {
+  const result = await pool.query<ClienteRow>(`${SELECT_BASE} WHERE c.usuario_id = $1`, [usuarioId]);
+  return result.rows[0] ? mapRow(result.rows[0]) : null;
+}
+
 export async function atualizarCliente(
   id: string,
   input: Partial<{

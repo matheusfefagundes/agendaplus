@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { obterSessao, obterSessaoAdmin } from "@/lib/auth";
-import { novoAgendamentoSchema } from "@/lib/validation";
+import { obterSessao } from "@/lib/auth";
+import { novoAgendamentoClienteSchema, novoAgendamentoSchema } from "@/lib/validation";
+import { obterClientePorUsuarioId } from "@/services/cliente.service";
 import {
   calcularHorariosDisponiveis,
   criarAgendamento,
@@ -29,18 +30,34 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const sessao = await obterSessaoAdmin();
+  const sessao = await obterSessao();
   if (!sessao) return NextResponse.json({ error: "Não autorizado." }, { status: 401 });
 
   const body = await request.json().catch(() => null);
-  const parsed = novoAgendamentoSchema.safeParse(body);
-  if (!parsed.success) {
-    const mensagem = parsed.error.issues[0]?.message ?? "Dados inválidos.";
-    return NextResponse.json({ error: mensagem }, { status: 400 });
-  }
 
   try {
-    const agendamento = await criarAgendamento(parsed.data);
+    let dadosCriacao: Parameters<typeof criarAgendamento>[0];
+
+    if (sessao.role === "cliente") {
+      const parsed = novoAgendamentoClienteSchema.safeParse(body);
+      if (!parsed.success) {
+        const mensagem = parsed.error.issues[0]?.message ?? "Dados inválidos.";
+        return NextResponse.json({ error: mensagem }, { status: 400 });
+      }
+      // clienteId nunca vem do corpo da requisição — sempre da sessão.
+      const cliente = await obterClientePorUsuarioId(sessao.sub);
+      if (!cliente) return NextResponse.json({ error: "Não autorizado." }, { status: 403 });
+      dadosCriacao = { ...parsed.data, clienteId: cliente.id };
+    } else {
+      const parsed = novoAgendamentoSchema.safeParse(body);
+      if (!parsed.success) {
+        const mensagem = parsed.error.issues[0]?.message ?? "Dados inválidos.";
+        return NextResponse.json({ error: mensagem }, { status: 400 });
+      }
+      dadosCriacao = parsed.data;
+    }
+
+    const agendamento = await criarAgendamento(dadosCriacao);
     return NextResponse.json({ agendamento }, { status: 201 });
   } catch (error) {
     if (error instanceof HorarioIndisponivelError) {

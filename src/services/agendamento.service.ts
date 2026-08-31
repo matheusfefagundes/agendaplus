@@ -12,6 +12,7 @@ import type { AgendamentoDetalhe, StatusAgendamento } from "@/types/agendamento"
 
 export class TransicaoInvalidaError extends Error {}
 export class HorarioIndisponivelError extends Error {}
+export class AgendamentoNaoEncontradoError extends Error {}
 
 const GRANULARIDADE_MINUTOS = 15;
 
@@ -68,6 +69,81 @@ export async function listarAgendamentosHistorico(): Promise<AgendamentoDetalhe[
     `${SELECT_BASE} WHERE a.status IN ('concluido', 'cancelado') ORDER BY a.data_hora_inicio DESC`,
   );
   return result.rows.map(mapRow);
+}
+
+export async function obterProximoAgendamentoCliente(
+  clienteId: string,
+): Promise<AgendamentoDetalhe | null> {
+  const result = await pool.query<AgendamentoRow>(
+    `${SELECT_BASE} WHERE a.cliente_id = $1 AND a.status IN ('pendente', 'confirmado') AND a.data_hora_inicio >= now()
+     ORDER BY a.data_hora_inicio ASC LIMIT 1`,
+    [clienteId],
+  );
+  return result.rows[0] ? mapRow(result.rows[0]) : null;
+}
+
+export async function listarAgendamentosFuturosCliente(
+  clienteId: string,
+): Promise<AgendamentoDetalhe[]> {
+  const result = await pool.query<AgendamentoRow>(
+    `${SELECT_BASE} WHERE a.cliente_id = $1 AND a.status IN ('pendente', 'confirmado')
+     ORDER BY a.data_hora_inicio ASC`,
+    [clienteId],
+  );
+  return result.rows.map(mapRow);
+}
+
+export async function listarAgendamentosHistoricoCliente(
+  clienteId: string,
+  filtros: { servicoId?: string; mes?: string },
+  limite: number,
+  offset: number,
+): Promise<{ agendamentos: AgendamentoDetalhe[]; temMais: boolean }> {
+  const condicoes = ["a.cliente_id = $1", "a.status IN ('concluido', 'cancelado')"];
+  const valores: unknown[] = [clienteId];
+
+  if (filtros.servicoId) {
+    valores.push(filtros.servicoId);
+    condicoes.push(`a.servico_id = $${valores.length}`);
+  }
+  if (filtros.mes) {
+    valores.push(`${filtros.mes}-01`);
+    condicoes.push(
+      `a.data_hora_inicio >= $${valores.length}::date AND a.data_hora_inicio < ($${valores.length}::date + interval '1 month')`,
+    );
+  }
+
+  valores.push(limite + 1, offset);
+  const result = await pool.query<AgendamentoRow>(
+    `${SELECT_BASE} WHERE ${condicoes.join(" AND ")} ORDER BY a.data_hora_inicio DESC LIMIT $${valores.length - 1} OFFSET $${valores.length}`,
+    valores,
+  );
+
+  const agendamentos = result.rows.slice(0, limite).map(mapRow);
+  return { agendamentos, temMais: result.rows.length > limite };
+}
+
+export async function obterAgendamentoClienteId(id: string): Promise<string | null> {
+  const result = await pool.query<{ cliente_id: string }>(
+    "SELECT cliente_id FROM agendamentos WHERE id = $1",
+    [id],
+  );
+  return result.rows[0]?.cliente_id ?? null;
+}
+
+export async function cancelarAgendamentoCliente(
+  clienteId: string,
+  id: string,
+): Promise<AgendamentoDetalhe> {
+  const donoId = await obterAgendamentoClienteId(id);
+  if (donoId !== clienteId) {
+    throw new AgendamentoNaoEncontradoError("Agendamento não encontrado.");
+  }
+  const agendamento = await atualizarStatusAgendamento(id, "cancelado");
+  if (!agendamento) {
+    throw new AgendamentoNaoEncontradoError("Agendamento não encontrado.");
+  }
+  return agendamento;
 }
 
 const TRANSICOES_PERMITIDAS: Record<StatusAgendamento, StatusAgendamento[]> = {

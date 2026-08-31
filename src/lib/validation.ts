@@ -98,3 +98,12 @@ export const novoAgendamentoSchema = z
     observacoes: z.string().trim().max(2000).nullable().optional(),
   })
   .strict();
+
+export const novoAgendamentoClienteSchema = z
+  .object({
+    servicoId: z.string().uuid("Serviço inválido."),
+    data: z.string().regex(DATA_REGEX, "Informe uma data válida."),
+    horario: z.string().regex(HORARIO_REGEX, "Informe um horário válido."),
+    observacoes: z.string().trim().max(2000).nullable().optional(),
+  })
+  .strict();

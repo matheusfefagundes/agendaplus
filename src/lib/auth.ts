@@ -59,6 +59,11 @@ export async function obterSessaoAdmin(): Promise<PayloadSessao | null> {
   return sessao && sessao.role === "admin" ? sessao : null;
 }
 
+export async function obterSessaoCliente(): Promise<PayloadSessao | null> {
+  const sessao = await obterSessao();
+  return sessao && sessao.role === "cliente" ? sessao : null;
+}
+
 export function definirCookieSessao(response: NextResponse, token: string): void {
   response.cookies.set(NOME_COOKIE_SESSAO, token, {
     httpOnly: true,

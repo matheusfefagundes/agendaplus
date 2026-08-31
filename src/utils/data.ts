@@ -64,3 +64,43 @@ export function diaDaSemana(dataISO: string): number {
   const [ano, mes, dia] = dataISO.split("-").map(Number);
   return new Date(Date.UTC(ano, mes - 1, dia)).getUTCDay();
 }
+
+export function saudacaoPorHorarioBrasil(): string {
+  const hora = Number(
+    new Intl.DateTimeFormat("pt-BR", { timeZone: FUSO_HORARIO, hour: "2-digit", hourCycle: "h23" }).format(
+      new Date(),
+    ),
+  );
+  if (hora < 12) return "Bom dia";
+  if (hora < 18) return "Boa tarde";
+  return "Boa noite";
+}
+
+export function formatarDataExtensa(dataISO: string): string {
+  const [ano, mes, dia] = dataISO.split("-").map(Number);
+  const data = new Date(Date.UTC(ano, mes - 1, dia));
+  return new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC", day: "2-digit", month: "long", year: "numeric" }).format(
+    data,
+  );
+}
+
+export function formatarDiaEMes(dataISO: string): string {
+  const [, mes, dia] = dataISO.split("-").map(Number);
+  const data = new Date(Date.UTC(2000, mes - 1, dia));
+  return `${dia} de ${new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC", month: "long" }).format(data)}`;
+}
+
+export function rotuloAgrupamentoData(dataISO: string): string {
+  const hoje = hojeEmSaoPauloISO();
+  if (dataISO === hoje) return `Hoje, ${formatarDiaEMes(dataISO)}`;
+  if (dataISO === adicionarDias(hoje, -1)) return `Ontem, ${formatarDiaEMes(dataISO)}`;
+  return formatarDiaSemanaEData(dataISO);
+}
+
+export function formatarDiaSemanaEData(dataISO: string): string {
+  const [ano, mes, dia] = dataISO.split("-").map(Number);
+  const data = new Date(Date.UTC(ano, mes - 1, dia));
+  const diaSemana = new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC", weekday: "long" }).format(data);
+  const diaSemanaCapitalizado = diaSemana.charAt(0).toUpperCase() + diaSemana.slice(1);
+  return `${diaSemanaCapitalizado}, ${formatarDiaEMes(dataISO)}`;
+}
