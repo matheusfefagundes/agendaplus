@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import { Check, ChevronDown } from "lucide-react";
+import { Popover } from "@/components/ui/Popover";
 
 export type OpcaoSelect = {
   value: string;
@@ -27,53 +27,44 @@ export function Select({
   options,
   disabled,
 }: SelectProps) {
-  const [aberto, setAberto] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function aoClicarFora(event: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setAberto(false);
-      }
-    }
-    document.addEventListener("mousedown", aoClicarFora);
-    return () => document.removeEventListener("mousedown", aoClicarFora);
-  }, []);
-
   const selecionado = options.find((opcao) => opcao.value === value);
 
   return (
-    <div className="relative flex flex-col gap-1.5" ref={containerRef}>
+    <div className="flex flex-col gap-1.5">
       {label && (
         <label htmlFor={id} className="text-sm text-ink">
           {label}
         </label>
       )}
-      <button
-        type="button"
-        id={id}
-        disabled={disabled}
-        onClick={() => setAberto((atual) => !atual)}
-        className="flex w-full items-center justify-between rounded-3xl border border-input-border bg-input px-4 py-3 text-left text-ink disabled:opacity-60"
+      <Popover
+        className="w-full"
+        panelClassName="max-h-64 w-full overflow-y-auto p-2"
+        trigger={({ aberto, alternar }) => (
+          <button
+            type="button"
+            id={id}
+            disabled={disabled}
+            onClick={alternar}
+            className="flex w-full items-center justify-between rounded-3xl border border-input-border bg-input px-4 py-3 text-left text-ink disabled:opacity-60"
+          >
+            <span className={`truncate ${selecionado ? "" : "text-ink-muted"}`}>
+              {selecionado ? selecionado.label : placeholder}
+            </span>
+            <ChevronDown
+              size={18}
+              className={`shrink-0 text-ink-muted transition-transform ${aberto ? "rotate-180" : ""}`}
+            />
+          </button>
+        )}
       >
-        <span className={`truncate ${selecionado ? "" : "text-ink-muted"}`}>
-          {selecionado ? selecionado.label : placeholder}
-        </span>
-        <ChevronDown
-          size={18}
-          className={`shrink-0 text-ink-muted transition-transform ${aberto ? "rotate-180" : ""}`}
-        />
-      </button>
-
-      {aberto && (
-        <div className="absolute top-full z-50 mt-2 max-h-64 w-full overflow-y-auto rounded-3xl border border-input-border bg-cream p-2 shadow-lg">
-          {options.map((opcao) => (
+        {({ fechar }) =>
+          options.map((opcao) => (
             <button
               key={opcao.value}
               type="button"
               onClick={() => {
                 onChange(opcao.value);
-                setAberto(false);
+                fechar();
               }}
               className={`flex w-full items-center justify-between rounded-2xl px-3 py-2 text-left text-sm ${
                 opcao.value === value ? "bg-brand text-white" : "text-ink hover:bg-input"
@@ -82,9 +73,9 @@ export function Select({
               {opcao.label}
               {opcao.value === value && <Check size={16} />}
             </button>
-          ))}
-        </div>
-      )}
+          ))
+        }
+      </Popover>
     </div>
   );
 }

@@ -98,7 +98,7 @@ export async function atualizarServico(
 }
 
 const MENSAGEM_SERVICO_VINCULADO =
-  "Não é possível excluir: existem agendamentos vinculados a este serviço.";
+  "Não é possível excluir esse serviço pois existem agendamentos vinculados a ele.";
 
 export async function excluirServico(id: string): Promise<void> {
   const vinculo = await pool.query("SELECT 1 FROM agendamentos WHERE servico_id = $1 LIMIT 1", [id]);

@@ -29,7 +29,7 @@ function mapRow(row: HorarioRow): Horario {
 const COLUNAS = "id, dia_semana, hora_inicio, hora_fim, intervalo_minutos, ativo";
 
 const MENSAGEM_HORARIO_OCUPADO =
-  "Não é possível alterar: existem agendamentos marcados dentro desse horário. Cancele ou remaneje-os antes de editar a janela.";
+  "Não é possível alterar, existem agendamentos marcados dentro desse horário. Cancele ou remaneje-os antes de editar a janela.";
 
 async function comTratamentoDeConflito<T>(fn: () => Promise<T>): Promise<T> {
   try {

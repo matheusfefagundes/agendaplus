@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState, type ChangeEvent, type KeyboardEvent } from "react";
+import { useState, type ChangeEvent, type KeyboardEvent } from "react";
 import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
+import { Popover } from "@/components/ui/Popover";
 
 const DIAS_ABREV = ["D", "S", "T", "Q", "Q", "S", "S"];
 const MESES = [
@@ -68,15 +69,15 @@ function paraISODeDigitado(texto: string): string | null {
 }
 
 export function DatePicker({ id, label, value, onChange, min }: DatePickerProps) {
-  const [aberto, setAberto] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-
   const hoje = new Date();
   const hojeISO = paraISO(hoje.getFullYear(), hoje.getMonth() + 1, hoje.getDate());
   const base = paraPartes(value || min || hojeISO);
   const [mesVisivel, setMesVisivel] = useState({ ano: base.ano, mes: base.mes });
   const [texto, setTexto] = useState(value ? formatarExibicao(value) : "");
 
+  // Reabrir o calendário sempre no mês do valor atual e ressincronizar o
+  // texto digitado (ex: quando o form é limpo depois de agendar) — ajuste
+  // durante o render, não em efeito.
   const [valorAnterior, setValorAnterior] = useState(value);
   if (value !== valorAnterior) {
     setValorAnterior(value);
@@ -84,16 +85,6 @@ export function DatePicker({ id, label, value, onChange, min }: DatePickerProps)
     setMesVisivel({ ano: partes.ano, mes: partes.mes });
     setTexto(value ? formatarExibicao(value) : "");
   }
-
-  useEffect(() => {
-    function aoClicarFora(event: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setAberto(false);
-      }
-    }
-    document.addEventListener("mousedown", aoClicarFora);
-    return () => document.removeEventListener("mousedown", aoClicarFora);
-  }, []);
 
   const totalDias = diasDoMes(mesVisivel.ano, mesVisivel.mes);
   const offset = primeiroDiaSemana(mesVisivel.ano, mesVisivel.mes);
@@ -117,11 +108,11 @@ export function DatePicker({ id, label, value, onChange, min }: DatePickerProps)
     });
   }
 
-  function selecionar(dia: number) {
+  function selecionar(dia: number, fechar: () => void) {
     const iso = paraISO(mesVisivel.ano, mesVisivel.mes, dia);
     if (min && iso < min) return;
     onChange(iso);
-    setAberto(false);
+    fechar();
   }
 
   function aoDigitar(event: ChangeEvent<HTMLInputElement>) {
@@ -147,96 +138,102 @@ export function DatePicker({ id, label, value, onChange, min }: DatePickerProps)
   }
 
   return (
-    <div className="relative flex flex-col gap-1.5" ref={containerRef}>
+    <div className="flex flex-col gap-1.5">
       {label && (
         <label htmlFor={id} className="text-sm text-ink">
           {label}
         </label>
       )}
-      <div className="relative flex w-full items-center">
-        <input
-          id={id}
-          type="text"
-          inputMode="numeric"
-          placeholder="dd/mm/aaaa"
-          value={texto}
-          onChange={aoDigitar}
-          onFocus={() => setAberto(true)}
-          onBlur={aoSairDoCampo}
-          onKeyDown={aoPressionarTecla}
-          className="w-full rounded-3xl border border-input-border bg-input px-4 py-3 pr-11 text-ink placeholder:text-ink-muted"
-        />
-        <button
-          type="button"
-          onClick={() => setAberto((atual) => !atual)}
-          aria-label="Abrir calendário"
-          className="absolute right-3 text-ink-muted hover:text-ink"
-        >
-          <CalendarDays size={18} />
-        </button>
-      </div>
-
-      {aberto && (
-        <div className="absolute top-full z-50 mt-2 w-72 rounded-3xl border border-input-border bg-cream p-4 shadow-lg">
-          <div className="flex items-center justify-between pb-3">
+      <Popover
+        className="w-full"
+        panelClassName="w-72 p-4"
+        trigger={({ abrir, alternar }) => (
+          <div className="relative flex w-full items-center">
+            <input
+              id={id}
+              type="text"
+              inputMode="numeric"
+              placeholder="dd/mm/aaaa"
+              value={texto}
+              onChange={aoDigitar}
+              onFocus={abrir}
+              onBlur={aoSairDoCampo}
+              onKeyDown={aoPressionarTecla}
+              className="w-full rounded-3xl border border-input-border bg-input px-4 py-3 pr-11 text-ink placeholder:text-ink-muted"
+            />
             <button
               type="button"
-              onClick={() => mudarMes(-1)}
-              aria-label="Mês anterior"
-              className="rounded-full p-1.5 text-ink hover:bg-input"
+              onClick={alternar}
+              aria-label="Abrir calendário"
+              className="absolute right-3 text-ink-muted hover:text-ink"
             >
-              <ChevronLeft size={16} />
-            </button>
-            <span className="text-sm font-semibold text-ink">
-              {MESES[mesVisivel.mes - 1]} {mesVisivel.ano}
-            </span>
-            <button
-              type="button"
-              onClick={() => mudarMes(1)}
-              aria-label="Próximo mês"
-              className="rounded-full p-1.5 text-ink hover:bg-input"
-            >
-              <ChevronRight size={16} />
+              <CalendarDays size={18} />
             </button>
           </div>
+        )}
+      >
+        {({ fechar }) => (
+          <>
+            <div className="flex items-center justify-between pb-3">
+              <button
+                type="button"
+                onClick={() => mudarMes(-1)}
+                aria-label="Mês anterior"
+                className="rounded-full p-1.5 text-ink hover:bg-input"
+              >
+                <ChevronLeft size={16} />
+              </button>
+              <span className="text-sm font-semibold text-ink">
+                {MESES[mesVisivel.mes - 1]} {mesVisivel.ano}
+              </span>
+              <button
+                type="button"
+                onClick={() => mudarMes(1)}
+                aria-label="Próximo mês"
+                className="rounded-full p-1.5 text-ink hover:bg-input"
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
 
-          <div className="grid grid-cols-7 gap-1 text-center text-xs text-ink-muted">
-            {DIAS_ABREV.map((dia, i) => (
-              <span key={i}>{dia}</span>
-            ))}
-          </div>
+            <div className="grid grid-cols-7 gap-1 text-center text-xs text-ink-muted">
+              {DIAS_ABREV.map((dia, i) => (
+                <span key={i}>{dia}</span>
+              ))}
+            </div>
 
-          <div className="mt-1 grid grid-cols-7 gap-1">
-            {celulas.map((dia, i) => {
-              if (dia === null) return <span key={`vazio-${i}`} />;
-              const iso = paraISO(mesVisivel.ano, mesVisivel.mes, dia);
-              const desabilitado = Boolean(min && iso < min);
-              const estaSelecionado = iso === value;
-              const ehHoje = iso === hojeISO;
+            <div className="mt-1 grid grid-cols-7 gap-1">
+              {celulas.map((dia, i) => {
+                if (dia === null) return <span key={`vazio-${i}`} />;
+                const iso = paraISO(mesVisivel.ano, mesVisivel.mes, dia);
+                const desabilitado = Boolean(min && iso < min);
+                const estaSelecionado = iso === value;
+                const ehHoje = iso === hojeISO;
 
-              return (
-                <button
-                  key={iso}
-                  type="button"
-                  disabled={desabilitado}
-                  onClick={() => selecionar(dia)}
-                  className={`aspect-square rounded-full text-sm transition-colors ${
-                    estaSelecionado
-                      ? "bg-brand font-semibold text-white"
-                      : ehHoje
-                        ? "border border-brand text-brand"
-                        : desabilitado
-                          ? "cursor-not-allowed text-ink-muted/40"
-                          : "text-ink hover:bg-input"
-                  }`}
-                >
-                  {dia}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
+                return (
+                  <button
+                    key={iso}
+                    type="button"
+                    disabled={desabilitado}
+                    onClick={() => selecionar(dia, fechar)}
+                    className={`aspect-square rounded-full text-sm transition-colors ${
+                      estaSelecionado
+                        ? "bg-brand font-semibold text-white"
+                        : ehHoje
+                          ? "border border-brand text-brand"
+                          : desabilitado
+                            ? "cursor-not-allowed text-ink-muted/40"
+                            : "text-ink hover:bg-input"
+                    }`}
+                  >
+                    {dia}
+                  </button>
+                );
+              })}
+            </div>
+          </>
+        )}
+      </Popover>
     </div>
   );
 }
