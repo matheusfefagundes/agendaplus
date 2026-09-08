@@ -53,10 +53,17 @@ const SELECT_BASE = `
   JOIN servicos s ON s.id = a.servico_id
 `;
 
+export async function concluirAgendamentosVencidos(): Promise<void> {
+  await pool.query(
+    `UPDATE agendamentos SET status = 'concluido' WHERE status = 'confirmado' AND data_hora_fim < now()`,
+  );
+}
+
 export async function listarAgendamentosPeriodo(
   inicio: Date,
   fim: Date,
 ): Promise<AgendamentoDetalhe[]> {
+  await concluirAgendamentosVencidos();
   const result = await pool.query<AgendamentoRow>(
     `${SELECT_BASE} WHERE a.data_hora_inicio >= $1 AND a.data_hora_inicio < $2 ORDER BY a.data_hora_inicio ASC`,
     [inicio, fim],
@@ -65,6 +72,7 @@ export async function listarAgendamentosPeriodo(
 }
 
 export async function listarAgendamentosHistorico(): Promise<AgendamentoDetalhe[]> {
+  await concluirAgendamentosVencidos();
   const result = await pool.query<AgendamentoRow>(
     `${SELECT_BASE} WHERE a.status IN ('concluido', 'cancelado') ORDER BY a.data_hora_inicio DESC`,
   );
@@ -74,6 +82,7 @@ export async function listarAgendamentosHistorico(): Promise<AgendamentoDetalhe[
 export async function obterProximoAgendamentoCliente(
   clienteId: string,
 ): Promise<AgendamentoDetalhe | null> {
+  await concluirAgendamentosVencidos();
   const result = await pool.query<AgendamentoRow>(
     `${SELECT_BASE} WHERE a.cliente_id = $1 AND a.status IN ('pendente', 'confirmado') AND a.data_hora_inicio >= now()
      ORDER BY a.data_hora_inicio ASC LIMIT 1`,
@@ -85,6 +94,7 @@ export async function obterProximoAgendamentoCliente(
 export async function listarAgendamentosFuturosCliente(
   clienteId: string,
 ): Promise<AgendamentoDetalhe[]> {
+  await concluirAgendamentosVencidos();
   const result = await pool.query<AgendamentoRow>(
     `${SELECT_BASE} WHERE a.cliente_id = $1 AND a.status IN ('pendente', 'confirmado')
      ORDER BY a.data_hora_inicio ASC`,
@@ -99,6 +109,7 @@ export async function listarAgendamentosHistoricoCliente(
   limite: number,
   offset: number,
 ): Promise<{ agendamentos: AgendamentoDetalhe[]; temMais: boolean }> {
+  await concluirAgendamentosVencidos();
   const condicoes = ["a.cliente_id = $1", "a.status IN ('concluido', 'cancelado')"];
   const valores: unknown[] = [clienteId];
 
