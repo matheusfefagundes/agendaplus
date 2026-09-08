@@ -11,6 +11,8 @@
     "db:migrate:up": "node-pg-migrate up -m src/db/migrations",
     "db:migrate:down": "node-pg-migrate down -m src/db/migrations",
     "db:migrate:create": "node-pg-migrate create -m src/db/migrations --",
+    "db:seed": "tsx scripts/seed.ts",
+    "email:test": "tsx scripts/test-email.ts",
     "create-admin": "tsx scripts/create-admin.ts"
   },
   "dependencies": {

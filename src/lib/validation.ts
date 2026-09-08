@@ -15,6 +15,19 @@ export const loginSchema = z
   })
   .strict();
 
+export const solicitarRedefinicaoSenhaSchema = z
+  .object({
+    email: z.string().trim().toLowerCase().email("Informe um e-mail válido.").max(150),
+  })
+  .strict();
+
+export const redefinirSenhaSchema = z
+  .object({
+    token: z.string().regex(/^[a-f0-9]{64}$/i, "Link de redefinição inválido."),
+    novaSenha: z.string().min(8, "A nova senha precisa ter pelo menos 8 caracteres.").max(72),
+  })
+  .strict();
+
 export const servicoSchema = z
   .object({
     nome: z.string().trim().min(2, "Informe o nome do serviço.").max(150),

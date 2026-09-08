@@ -113,7 +113,7 @@ agenda-plus/
 ## Como Executar o Projeto
 
 ### Pré-requisitos
-- Node.js (versão 18.x ou superior)
+- Node.js (versão 20.9 ou superior)
 - npm, yarn ou pnpm
 - Instância do PostgreSQL configurada e em execução
 
@@ -134,9 +134,17 @@ agenda-plus/
    Crie um arquivo `.env.local` na raiz do projeto contendo as credenciais de acesso:
    ```env
    PORT=3000
-   DATABASE_URL=postgresql://usuario:senha@localhost:5432/agendaplus
+   DATABASE_URL=postgresql://agendaplus:agendaplus@localhost:5433/agendaplus
    JWT_SECRET=sua_chave_secreta_jwt
+   APP_URL=http://localhost:3000
+   BREVO_API_KEY=sua_chave_da_brevo
+   BREVO_SENDER_EMAIL=seu-email@gmail.com
+   BREVO_SENDER_NAME=Agenda+
    ```
+
+   Cadastre `BREVO_SENDER_EMAIL` como remetente no painel da Brevo e confirme
+   o código recebido nesse endereço. A chave e o remetente ficam disponíveis
+   apenas no servidor e nunca devem usar o prefixo `NEXT_PUBLIC_`.
 
 4. **Executar o Projeto:**
    Inicie o servidor de desenvolvimento do Next.js (que executará tanto o Frontend quanto as API Routes unificadas):

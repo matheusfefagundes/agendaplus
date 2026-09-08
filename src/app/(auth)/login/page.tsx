@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Eye, EyeOff, Lock, Mail } from "lucide-react";
+import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { Button } from "@/components/ui/Button";
@@ -85,12 +85,17 @@ export default function LoginPage() {
         </>
       }
       footer={
-        <p className="flex justify-center gap-1 text-center text-sm text-ink">
-          Ainda não tem uma conta?{" "}
-          <Link href="/cadastro" className="font-bold text-brand hover:opacity-90">
-            Cadastre-se
+        <div className="flex flex-col items-center gap-2 text-center text-sm">
+          <p className="text-ink">
+            Ainda não tem uma conta?{" "}
+            <Link href="/cadastro" className="font-bold text-brand hover:opacity-90">
+              Cadastre-se
+            </Link>
+          </p>
+          <Link href="/esqueci-senha" className="font-bold text-brand hover:opacity-90">
+            Esqueci minha senha
           </Link>
-        </p>
+        </div>
       }
     >
       <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
@@ -118,14 +123,6 @@ export default function LoginPage() {
           icon={<Lock size={18} />}
           error={errors.password}
           onChange={() => limparErro("password")}
-          labelAction={
-            <Link
-              href="/esqueci-senha"
-              className="border-b border-transparent pb-px text-sm font-bold text-brand hover:border-brand"
-            >
-              Esqueci minha senha
-            </Link>
-          }
           rightSlot={
             <button
               type="button"
