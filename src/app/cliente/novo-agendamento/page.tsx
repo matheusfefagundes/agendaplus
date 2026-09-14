@@ -8,7 +8,7 @@ export default async function NovoAgendamentoPage() {
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-1">
-        <h1 className="text-3xl font-light tracking-tight text-ink sm:text-4xl">Agende seu momento</h1>
+        <h1 className="text-3xl font-bold tracking-tight text-ink sm:text-4xl">Agende seu momento</h1>
       </div>
 
       {ativos.length === 0 ? (
