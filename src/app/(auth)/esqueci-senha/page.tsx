@@ -58,7 +58,7 @@ export default function EsqueciSenhaPage() {
     >
       {enviado ? (
         <div className="rounded-3xl bg-cream-dark p-6 text-sm leading-6 text-ink">
-          Se houver uma conta com o e-mail informado, enviaremos as instruções. O link será válido por 1 hora.
+          Link enviado para o seu email.
         </div>
       ) : (
         <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">

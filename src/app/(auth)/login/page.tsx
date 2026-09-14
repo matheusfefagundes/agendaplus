@@ -92,9 +92,6 @@ export default function LoginPage() {
               Cadastre-se
             </Link>
           </p>
-          <Link href="/esqueci-senha" className="font-bold text-brand hover:opacity-90">
-            Esqueci minha senha
-          </Link>
         </div>
       }
     >
@@ -123,6 +120,11 @@ export default function LoginPage() {
           icon={<Lock size={18} />}
           error={errors.password}
           onChange={() => limparErro("password")}
+          labelAction={
+            <Link href="/esqueci-senha" className="text-sm font-bold text-brand hover:opacity-90">
+              Esqueci minha senha
+            </Link>
+          }
           rightSlot={
             <button
               type="button"

@@ -3,15 +3,9 @@ import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { solicitarRedefinicaoSenhaSchema } from "@/lib/validation";
 import { solicitarRedefinicaoSenha } from "@/services/redefinicao-senha.service";
 
-const MENSAGEM_SUCESSO =
-  "Se houver uma conta com este e-mail, você receberá as instruções para redefinir sua senha.";
+const MENSAGEM_SUCESSO = "Link enviado para o seu email.";
 
 export async function POST(request: NextRequest) {
-  const ip = getClientIp(request);
-  if (!checkRateLimit(`esqueci-senha:${ip}`, 5, 15 * 60 * 1000)) {
-    return NextResponse.json({ error: "Muitas tentativas. Tente novamente mais tarde." }, { status: 429 });
-  }
-
   const body = await request.json().catch(() => null);
   const parsed = solicitarRedefinicaoSenhaSchema.safeParse(body);
   if (!parsed.success) {
@@ -19,6 +13,13 @@ export async function POST(request: NextRequest) {
       { error: parsed.error.issues[0]?.message ?? "Dados inválidos." },
       { status: 400 },
     );
+  }
+
+  const ip = getClientIp(request);
+  const limitePorIpOk = checkRateLimit(`esqueci-senha:${ip}`, 5, 15 * 60 * 1000);
+  const limitePorEmailOk = checkRateLimit(`esqueci-senha-email:${parsed.data.email}`, 5, 15 * 60 * 1000);
+  if (!limitePorIpOk || !limitePorEmailOk) {
+    return NextResponse.json({ error: "Muitas tentativas. Tente novamente mais tarde." }, { status: 429 });
   }
 
   try {
