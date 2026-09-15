@@ -43,6 +43,55 @@ export async function registerCliente(input: { nome: string; email: string; senh
   }
 }
 
+export async function loginComGoogle(input: { googleId: string; email: string; nome: string }) {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+
+    const porGoogleId = await client.query<{ id: string; tipo: Papel; ativo: boolean }>(
+      "SELECT id, tipo, ativo FROM usuarios WHERE google_id = $1",
+      [input.googleId],
+    );
+    if (porGoogleId.rowCount) {
+      const usuario = porGoogleId.rows[0];
+      if (!usuario.ativo) throw new AuthError("Conta desativada.");
+      await client.query("COMMIT");
+      return { id: usuario.id, role: usuario.tipo };
+    }
+
+    const porEmail = await client.query<{ id: string; tipo: Papel; ativo: boolean }>(
+      "SELECT id, tipo, ativo FROM usuarios WHERE LOWER(email) = LOWER($1)",
+      [input.email],
+    );
+    if (porEmail.rowCount) {
+      const usuario = porEmail.rows[0];
+      if (!usuario.ativo) throw new AuthError("Conta desativada.");
+      await client.query("UPDATE usuarios SET google_id = $1 WHERE id = $2", [input.googleId, usuario.id]);
+      await client.query("COMMIT");
+      return { id: usuario.id, role: usuario.tipo };
+    }
+
+    const usuarioResult = await client.query<{ id: string }>(
+      `INSERT INTO usuarios (nome, email, google_id, tipo)
+       VALUES ($1, $2, $3, 'cliente')
+       RETURNING id`,
+      [input.nome, input.email, input.googleId],
+    );
+    const usuarioId = usuarioResult.rows[0].id;
+
+    await client.query("INSERT INTO clientes (usuario_id) VALUES ($1)", [usuarioId]);
+
+    await client.query("COMMIT");
+
+    return { id: usuarioId, role: "cliente" as const };
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
 export async function login(input: { email: string; senha: string }) {
   const result = await pool.query<{ id: string; senha_hash: string; tipo: Papel; ativo: boolean }>(
     "SELECT id, senha_hash, tipo, ativo FROM usuarios WHERE LOWER(email) = LOWER($1)",

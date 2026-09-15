@@ -140,11 +140,18 @@ agenda-plus/
    BREVO_API_KEY=sua_chave_da_brevo
    BREVO_SENDER_EMAIL=seu-email@gmail.com
    BREVO_SENDER_NAME=Agenda+
+   GOOGLE_CLIENT_ID=seu-client-id.apps.googleusercontent.com
+   GOOGLE_CLIENT_SECRET=seu-client-secret
    ```
 
    Cadastre `BREVO_SENDER_EMAIL` como remetente no painel da Brevo e confirme
    o código recebido nesse endereço. A chave e o remetente ficam disponíveis
    apenas no servidor e nunca devem usar o prefixo `NEXT_PUBLIC_`.
+
+   `GOOGLE_CLIENT_ID` e `GOOGLE_CLIENT_SECRET` vêm de um OAuth Client ID
+   (tipo "Web application") criado em
+   [console.cloud.google.com/apis/credentials](https://console.cloud.google.com/apis/credentials),
+   com `{APP_URL}/api/auth/google/callback` cadastrado como URI de redirecionamento autorizado.
 
 4. **Executar o Projeto:**
    Inicie o servidor de desenvolvimento do Next.js (que executará tanto o Frontend quanto as API Routes unificadas):

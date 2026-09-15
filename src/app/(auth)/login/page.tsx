@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react";
-import { useState, type FormEvent } from "react";
+import { Suspense, useEffect, useState, type FormEvent } from "react";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/TextField";
@@ -12,6 +12,18 @@ import { toast } from "@/lib/toast";
 type FieldName = "email" | "password";
 
 const REQUIRED_FIELDS: FieldName[] = ["email", "password"];
+
+function ErroGoogle() {
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get("erro") === "google") {
+      toast.danger("Não foi possível entrar com o Google. Tente novamente.");
+    }
+  }, [searchParams]);
+
+  return null;
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -95,6 +107,10 @@ export default function LoginPage() {
         </div>
       }
     >
+      <Suspense fallback={null}>
+        <ErroGoogle />
+      </Suspense>
+
       <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
         <TextField
           id="email"
@@ -141,6 +157,19 @@ export default function LoginPage() {
           {isSubmitting ? "Entrando..." : "Entrar"}
         </Button>
       </form>
+
+      <div className="flex items-center gap-3 text-xs font-semibold text-ink-muted">
+        <div className="h-px flex-1 bg-cream-dark" />
+        ou
+        <div className="h-px flex-1 bg-cream-dark" />
+      </div>
+
+      <a
+        href="/api/auth/google"
+        className="flex w-full items-center justify-center gap-2 rounded-full bg-input px-8 py-3.5 text-lg font-semibold text-brand shadow-[0px_12px_16px_rgba(26,28,25,0.06)] transition-opacity hover:opacity-90"
+      >
+        Entrar com Google
+      </a>
     </AuthLayout>
   );
 }
