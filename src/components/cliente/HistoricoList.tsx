@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Filter } from "lucide-react";
 import { Select } from "@/components/ui/Select";
 import { useMutacaoApi } from "@/hooks/useMutacaoApi";
 import { rotuloAgrupamentoData } from "@/utils/data";
@@ -48,15 +47,15 @@ export function HistoricoList({ agendamentosIniciais, temMaisInicial, servicos }
   const { enviando: filtrando, executar: executarFiltro } = useMutacaoApi();
   const { enviando: carregandoMais, executar: executarCarregarMais } = useMutacaoApi();
 
-  function construirUrl(offset: number) {
+  function construirUrl(offset: number, mes: string, servicoId: string) {
     const params = new URLSearchParams({ offset: String(offset) });
-    if (servicoIdFiltro) params.set("servicoId", servicoIdFiltro);
-    if (mesFiltro) params.set("mes", mesFiltro);
+    if (servicoId) params.set("servicoId", servicoId);
+    if (mes) params.set("mes", mes);
     return `/api/agendamentos/historico?${params.toString()}`;
   }
 
-  async function aplicarFiltro() {
-    await executarFiltro(() => fetch(construirUrl(0)), {
+  async function aplicarFiltro(mes: string, servicoId: string) {
+    await executarFiltro(() => fetch(construirUrl(0, mes, servicoId)), {
       mensagemErroPadrao: "Não foi possível carregar o histórico.",
       aoSucesso: (resposta) => {
         const { agendamentos: novos, temMais: novoTemMais } = resposta as {
@@ -69,8 +68,18 @@ export function HistoricoList({ agendamentosIniciais, temMaisInicial, servicos }
     });
   }
 
+  function handleMesChange(valor: string) {
+    setMesFiltro(valor);
+    void aplicarFiltro(valor, servicoIdFiltro);
+  }
+
+  function handleServicoChange(valor: string) {
+    setServicoIdFiltro(valor);
+    void aplicarFiltro(mesFiltro, valor);
+  }
+
   async function carregarMais() {
-    await executarCarregarMais(() => fetch(construirUrl(agendamentos.length)), {
+    await executarCarregarMais(() => fetch(construirUrl(agendamentos.length, mesFiltro, servicoIdFiltro)), {
       mensagemErroPadrao: "Não foi possível carregar mais atendimentos.",
       aoSucesso: (resposta) => {
         const { agendamentos: novos, temMais: novoTemMais } = resposta as {
@@ -93,31 +102,28 @@ export function HistoricoList({ agendamentosIniciais, temMaisInicial, servicos }
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="flex flex-wrap items-end gap-4">
-        <div className="flex min-w-[220px] flex-col gap-1.5">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4">
+        <div className="flex flex-col gap-1.5">
           <span className="px-2 text-sm text-ink-muted">Período</span>
-          <Select value={mesFiltro} onChange={setMesFiltro} options={opcoesPeriodo()} />
+          <Select
+            value={mesFiltro}
+            onChange={handleMesChange}
+            options={opcoesPeriodo()}
+            disabled={filtrando}
+          />
         </div>
-        <div className="flex min-w-[260px] flex-col gap-1.5">
+        <div className="flex flex-col gap-1.5">
           <span className="px-2 text-sm text-ink-muted">Serviço</span>
           <Select
             value={servicoIdFiltro}
-            onChange={setServicoIdFiltro}
+            onChange={handleServicoChange}
             options={[
               { value: "", label: "Todos os Serviços" },
               ...servicos.map((s) => ({ value: s.id, label: s.nome })),
             ]}
+            disabled={filtrando}
           />
         </div>
-        <button
-          type="button"
-          onClick={aplicarFiltro}
-          disabled={filtrando}
-          className="flex items-center gap-2 rounded-full bg-input px-6 py-3 text-sm font-bold text-brand transition-opacity hover:opacity-90 disabled:opacity-60"
-        >
-          <Filter size={16} />
-          {filtrando ? "Filtrando..." : "Filtrar"}
-        </button>
       </div>
 
       {agendamentos.length === 0 ? (
