@@ -1,11 +1,13 @@
-import { TriangleAlert } from "lucide-react";
+import { Info, TriangleAlert } from "lucide-react";
 import type { InputHTMLAttributes, ReactNode } from "react";
+import { Tooltip } from "@/components/ui/Tooltip";
 
 type TextFieldProps = InputHTMLAttributes<HTMLInputElement> & {
   label: string;
   icon?: ReactNode;
   rightSlot?: ReactNode;
   labelAction?: ReactNode;
+  tooltip?: ReactNode;
   error?: boolean;
   errorMessage?: string;
 };
@@ -15,6 +17,7 @@ export function TextField({
   icon,
   rightSlot,
   labelAction,
+  tooltip,
   error = false,
   errorMessage,
   id,
@@ -29,6 +32,11 @@ export function TextField({
         <label htmlFor={id} className="text-sm text-ink">
           {label}
         </label>
+        {tooltip && (
+          <Tooltip content={tooltip}>
+            <Info size={14} className="text-ink-muted" aria-label="Mais informações" />
+          </Tooltip>
+        )}
         {labelAction}
       </div>
       <div className="relative w-full">
