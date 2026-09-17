@@ -62,6 +62,14 @@ export const perfilSchema = z
   })
   .strict();
 
+export const clientePerfilSchema = z
+  .object({
+    nome: z.string().trim().min(2, "Informe seu nome completo.").max(150),
+    email: z.string().trim().toLowerCase().email("Informe um e-mail válido.").max(150),
+    telefone: z.string().trim().max(20).nullable().optional(),
+  })
+  .strict();
+
 export const senhaSchema = z
   .object({
     senhaAtual: z.string().min(1, "Informe sua senha atual."),

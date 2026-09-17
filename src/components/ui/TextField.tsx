@@ -25,7 +25,7 @@ export function TextField({
 
   return (
     <div className="flex w-full flex-col items-end gap-1.5">
-      <div className="flex w-full items-center justify-between">
+      <div className="flex w-full items-center gap-1.5">
         <label htmlFor={id} className="text-sm text-ink">
           {label}
         </label>

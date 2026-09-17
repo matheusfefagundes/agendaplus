@@ -9,7 +9,7 @@ type AuthLayoutProps = {
 
 export function AuthLayout({ subtitle, footer, children }: AuthLayoutProps) {
   return (
-    <div className="flex h-screen w-full items-stretch overflow-hidden bg-cream">
+    <div className="flex min-h-dvh w-full items-stretch bg-cream">
       <div className="relative hidden w-1/2 overflow-hidden bg-cream-dark lg:block">
         <Image
           src="/images/auth/login-hero.png"
@@ -22,7 +22,7 @@ export function AuthLayout({ subtitle, footer, children }: AuthLayoutProps) {
         <div className="absolute inset-0 bg-gradient-to-t from-[rgba(101,82,138,0.1)] to-transparent mix-blend-multiply" />
       </div>
 
-      <div className="flex w-full items-center justify-center overflow-hidden bg-cream px-8 py-10 lg:w-1/2 lg:px-24">
+      <div className="flex w-full items-center justify-center bg-cream px-8 py-10 lg:w-1/2 lg:px-24">
         <div className="flex w-full max-w-96 flex-col gap-4">
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-3">

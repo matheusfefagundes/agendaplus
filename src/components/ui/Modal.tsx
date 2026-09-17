@@ -22,7 +22,7 @@ export function Modal({ open, onClose, title, children, size = "default" }: Moda
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center sm:px-4">
       <div
-        className={`max-h-[90vh] w-full overflow-y-auto rounded-t-3xl bg-cream p-6 shadow-xl sm:rounded-3xl ${SIZE_CLASSES[size]}`}
+        className={`max-h-[90dvh] w-full overflow-y-auto rounded-t-3xl bg-cream p-6 shadow-xl sm:rounded-3xl ${SIZE_CLASSES[size]}`}
       >
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-bold text-ink">{title}</h2>

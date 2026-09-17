@@ -121,7 +121,7 @@ export default function LoginPage() {
           error={errors.password}
           onChange={() => limparErro("password")}
           labelAction={
-            <Link href="/esqueci-senha" className="text-sm font-bold text-brand hover:opacity-90">
+            <Link href="/esqueci-senha" className="ml-auto text-sm font-bold text-brand hover:opacity-90">
               Esqueci minha senha
             </Link>
           }

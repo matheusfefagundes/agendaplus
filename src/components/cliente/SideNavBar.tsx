@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CalendarDays, CalendarPlus, History, Home, LogOut, Menu, X } from "lucide-react";
 
 const ITENS_NAVEGACAO = [
@@ -21,6 +21,14 @@ export function SideNavBar({ nomeCliente }: SideNavBarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [menuAberto, setMenuAberto] = useState(false);
+
+  useEffect(() => {
+    if (!menuAberto) return;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [menuAberto]);
 
   async function sair() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -59,7 +67,13 @@ export function SideNavBar({ nomeCliente }: SideNavBarProps) {
       </div>
 
       <div className="flex flex-col gap-1">
-        <div className="flex items-center gap-3 rounded-2xl px-4 py-3">
+        <Link
+          href="/cliente/configuracoes"
+          onClick={() => setMenuAberto(false)}
+          className={`flex items-center gap-3 rounded-2xl px-4 py-3 transition-colors ${
+            pathname === "/cliente/configuracoes" ? "bg-brand/10" : "hover:bg-cream"
+          }`}
+        >
           <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand text-sm font-semibold text-white">
             {nomeCliente.charAt(0).toUpperCase()}
           </div>
@@ -67,7 +81,7 @@ export function SideNavBar({ nomeCliente }: SideNavBarProps) {
             <p className="truncate text-sm font-semibold text-ink">{nomeCliente}</p>
             <p className="text-xs text-ink-muted">Cliente</p>
           </div>
-        </div>
+        </Link>
         <button
           type="button"
           onClick={sair}

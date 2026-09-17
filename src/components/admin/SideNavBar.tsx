@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   CalendarDays,
   LayoutDashboard,
@@ -27,6 +27,14 @@ export function SideNavBar() {
   const pathname = usePathname();
   const router = useRouter();
   const [menuAberto, setMenuAberto] = useState(false);
+
+  useEffect(() => {
+    if (!menuAberto) return;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [menuAberto]);
 
   async function sair() {
     await fetch("/api/auth/logout", { method: "POST" });
