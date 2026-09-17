@@ -4,24 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import {
-  CalendarDays,
-  LayoutDashboard,
-  LogOut,
-  Menu,
-  Settings,
-  Sparkles,
-  Users,
-  X,
-} from "lucide-react";
-
-const ITENS_NAVEGACAO = [
-  { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/agenda", label: "Agenda", icon: CalendarDays },
-  { href: "/admin/servicos", label: "Serviços", icon: Sparkles },
-  { href: "/admin/clientes", label: "Clientes", icon: Users },
-  { href: "/admin/configuracoes", label: "Configurações", icon: Settings },
-];
+import { LogOut, Menu, X } from "lucide-react";
+import { ITENS_NAVEGACAO_ADMIN as ITENS_NAVEGACAO } from "@/utils/navegacao";
 
 export function SideNavBar() {
   const pathname = usePathname();

@@ -4,14 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { CalendarDays, CalendarPlus, History, Home, LogOut, Menu, X } from "lucide-react";
-
-const ITENS_NAVEGACAO = [
-  { href: "/cliente", label: "Início", icon: Home },
-  { href: "/cliente/meus-agendamentos", label: "Meus Agendamentos", icon: CalendarDays },
-  { href: "/cliente/novo-agendamento", label: "Novo Agendamento", icon: CalendarPlus },
-  { href: "/cliente/historico", label: "Histórico", icon: History },
-];
+import { LogOut, Menu, X } from "lucide-react";
+import { ITENS_NAVEGACAO_CLIENTE as ITENS_NAVEGACAO } from "@/utils/navegacao";
 
 type SideNavBarProps = {
   nomeCliente: string;
