@@ -8,6 +8,7 @@ import { TextField } from "@/components/ui/TextField";
 import { Textarea } from "@/components/ui/Textarea";
 import { Modal } from "@/components/ui/Modal";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { Select } from "@/components/ui/Select";
 import { useMutacaoApi } from "@/hooks/useMutacaoApi";
 import { formatarMoeda } from "@/utils/formatters";
 import type { Servico } from "@/types/servico";
@@ -16,14 +17,31 @@ type ServicosManagerProps = {
   servicos: Servico[];
 };
 
+type FiltroStatus = "todos" | "ativo" | "inativo";
+
+const OPCOES_FILTRO_STATUS = [
+  { value: "todos", label: "Todos" },
+  { value: "ativo", label: "Ativos" },
+  { value: "inativo", label: "Inativos" },
+];
+
 export function ServicosManager({ servicos }: ServicosManagerProps) {
   const router = useRouter();
   const [modalAberto, setModalAberto] = useState(false);
   const [servicoEditando, setServicoEditando] = useState<Servico | null>(null);
   const [servicoParaExcluir, setServicoParaExcluir] = useState<Servico | null>(null);
+  const [servicoParaDesativar, setServicoParaDesativar] = useState<Servico | null>(null);
+  const [filtroStatus, setFiltroStatus] = useState<FiltroStatus>("todos");
   const { enviando, executar: executarSalvar } = useMutacaoApi();
   const { executar: executarAlternar } = useMutacaoApi();
+  const { enviando: desativando, executar: executarDesativar } = useMutacaoApi();
   const { enviando: excluindo, executar: executarExcluir } = useMutacaoApi();
+
+  const servicosFiltrados = servicos.filter((servico) => {
+    if (filtroStatus === "ativo") return servico.ativo;
+    if (filtroStatus === "inativo") return !servico.ativo;
+    return true;
+  });
 
   function abrirNovo() {
     setServicoEditando(null);
@@ -83,6 +101,34 @@ export function ServicosManager({ servicos }: ServicosManagerProps) {
     );
   }
 
+  function pedirDesativacao(servico: Servico) {
+    if (!servico.ativo) {
+      alternarAtivo(servico);
+      return;
+    }
+    setServicoParaDesativar(servico);
+  }
+
+  async function confirmarDesativacao() {
+    if (!servicoParaDesativar) return;
+    await executarDesativar(
+      () =>
+        fetch(`/api/servicos/${servicoParaDesativar.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ativo: false }),
+        }),
+      {
+        mensagemSucesso: "Serviço desativado.",
+        mensagemErroPadrao: "Não foi possível desativar o serviço.",
+        aoSucesso: () => {
+          setServicoParaDesativar(null);
+          router.refresh();
+        },
+      },
+    );
+  }
+
   async function confirmarExclusao() {
     if (!servicoParaExcluir) return;
     await executarExcluir(() => fetch(`/api/servicos/${servicoParaExcluir.id}`, { method: "DELETE" }), {
@@ -101,17 +147,29 @@ export function ServicosManager({ servicos }: ServicosManagerProps) {
         <h1 className="text-2xl font-extrabold tracking-tight text-ink sm:text-3xl">
           Gestão de Serviços
         </h1>
-        <Button type="button" size="sm" className="w-full sm:w-auto" onClick={abrirNovo}>
-          <Plus size={18} />
-          Novo serviço
-        </Button>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="w-full sm:w-40">
+            <Select
+              value={filtroStatus}
+              onChange={(valor) => setFiltroStatus(valor as FiltroStatus)}
+              options={OPCOES_FILTRO_STATUS}
+              size="sm"
+            />
+          </div>
+          <Button type="button" size="sm" className="w-full sm:w-auto" onClick={abrirNovo}>
+            <Plus size={18} />
+            Novo serviço
+          </Button>
+        </div>
       </div>
 
       {servicos.length === 0 ? (
         <p className="text-ink-muted">Nenhum serviço cadastrado ainda.</p>
+      ) : servicosFiltrados.length === 0 ? (
+        <p className="text-ink-muted">Nenhum serviço encontrado para esse filtro.</p>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {servicos.map((servico) => (
+          {servicosFiltrados.map((servico) => (
             <div
               key={servico.id}
               className="flex h-full flex-col gap-3 rounded-3xl bg-cream-dark p-6"
@@ -144,7 +202,7 @@ export function ServicosManager({ servicos }: ServicosManagerProps) {
                 </button>
                 <button
                   type="button"
-                  onClick={() => alternarAtivo(servico)}
+                  onClick={() => pedirDesativacao(servico)}
                   className="flex-1 rounded-full border border-input-border py-2 text-sm font-medium text-ink hover:bg-cream"
                 >
                   {servico.ativo ? "Desativar" : "Ativar"}
@@ -216,6 +274,21 @@ export function ServicosManager({ servicos }: ServicosManagerProps) {
         confirming={excluindo}
         onConfirm={confirmarExclusao}
         onCancel={() => setServicoParaExcluir(null)}
+      />
+
+      <ConfirmModal
+        open={servicoParaDesativar !== null}
+        title="Desativar serviço"
+        message={
+          servicoParaDesativar
+            ? `Tem certeza que deseja desativar "${servicoParaDesativar.nome}"? Ele deixará de aparecer para novos agendamentos.`
+            : ""
+        }
+        confirmLabel="Desativar"
+        confirmingLabel="Desativando..."
+        confirming={desativando}
+        onConfirm={confirmarDesativacao}
+        onCancel={() => setServicoParaDesativar(null)}
       />
     </div>
   );

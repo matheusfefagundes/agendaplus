@@ -16,6 +16,12 @@ type SelectProps = {
   onChange: (valor: string) => void;
   options: OpcaoSelect[];
   disabled?: boolean;
+  size?: "default" | "sm";
+};
+
+const SIZE_CLASSES: Record<NonNullable<SelectProps["size"]>, string> = {
+  default: "px-4 py-3",
+  sm: "px-5 py-2 text-sm",
 };
 
 export function Select({
@@ -26,6 +32,7 @@ export function Select({
   onChange,
   options,
   disabled,
+  size = "default",
 }: SelectProps) {
   const selecionado = options.find((opcao) => opcao.value === value);
 
@@ -45,7 +52,7 @@ export function Select({
             id={id}
             disabled={disabled}
             onClick={alternar}
-            className="flex w-full items-center justify-between rounded-3xl border border-input-border bg-input px-4 py-3 text-left text-ink disabled:opacity-60"
+            className={`flex w-full items-center justify-between rounded-3xl border border-input-border bg-input text-left text-ink disabled:opacity-60 ${SIZE_CLASSES[size]}`}
           >
             <span className={`truncate ${selecionado ? "" : "text-ink-muted"}`}>
               {selecionado ? selecionado.label : placeholder}
