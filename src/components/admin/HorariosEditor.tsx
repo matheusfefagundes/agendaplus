@@ -182,14 +182,14 @@ export function HorariosEditor({ horarios }: HorariosEditorProps) {
             name="horaInicio"
             required
             aria-label="Horário de início"
-            className="w-full rounded-3xl border border-input-border bg-input px-4 py-3 text-ink"
+            className="w-full min-w-0 rounded-3xl border border-input-border bg-input px-4 py-3 text-ink focus:outline-2 focus:outline-brand"
           />
           <input
             type="time"
             name="horaFim"
             required
             aria-label="Horário de fim"
-            className="w-full rounded-3xl border border-input-border bg-input px-4 py-3 text-ink"
+            className="w-full min-w-0 rounded-3xl border border-input-border bg-input px-4 py-3 text-ink focus:outline-2 focus:outline-brand"
           />
         </div>
         <input
@@ -197,7 +197,7 @@ export function HorariosEditor({ horarios }: HorariosEditorProps) {
           name="intervaloMinutos"
           min={0}
           placeholder="Intervalo entre sessões (min)"
-          className="w-full rounded-3xl border border-input-border bg-input px-4 py-3 text-ink placeholder:text-ink-muted"
+          className="w-full rounded-3xl border border-input-border bg-input px-4 py-3 text-ink placeholder:text-ink-muted focus:outline-2 focus:outline-brand"
         />
         <Button type="submit" size="sm" disabled={!diaSemana || enviando} className="sm:w-auto">
           <Plus size={18} />
@@ -219,7 +219,7 @@ export function HorariosEditor({ horarios }: HorariosEditorProps) {
                 required
                 defaultValue={formatarHoraCurta(horarioEditando.horaInicio)}
                 aria-label="Horário de início"
-                className="w-full rounded-3xl border border-input-border bg-input px-4 py-3 text-ink"
+                className="w-full min-w-0 rounded-3xl border border-input-border bg-input px-4 py-3 text-ink focus:outline-2 focus:outline-brand"
               />
               <input
                 type="time"
@@ -227,7 +227,7 @@ export function HorariosEditor({ horarios }: HorariosEditorProps) {
                 required
                 defaultValue={formatarHoraCurta(horarioEditando.horaFim)}
                 aria-label="Horário de fim"
-                className="w-full rounded-3xl border border-input-border bg-input px-4 py-3 text-ink"
+                className="w-full min-w-0 rounded-3xl border border-input-border bg-input px-4 py-3 text-ink focus:outline-2 focus:outline-brand"
               />
             </div>
             <input
@@ -236,7 +236,7 @@ export function HorariosEditor({ horarios }: HorariosEditorProps) {
               min={0}
               defaultValue={horarioEditando.intervaloMinutos}
               placeholder="Intervalo entre sessões (min)"
-              className="w-full rounded-3xl border border-input-border bg-input px-4 py-3 text-ink placeholder:text-ink-muted"
+              className="w-full rounded-3xl border border-input-border bg-input px-4 py-3 text-ink placeholder:text-ink-muted focus:outline-2 focus:outline-brand"
             />
             <Button type="submit" size="sm" disabled={salvandoEdicao} className="mt-1 sm:w-auto">
               {salvandoEdicao ? "Salvando..." : "Salvar"}
