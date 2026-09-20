@@ -182,14 +182,14 @@ export function HorariosEditor({ horarios }: HorariosEditorProps) {
             name="horaInicio"
             required
             aria-label="Horário de início"
-            className="w-full min-w-0 rounded-3xl border border-input-border bg-input px-4 py-3 text-ink focus:outline-2 focus:outline-brand"
+            className="min-h-[50px] w-full min-w-0 max-w-full appearance-none rounded-3xl border border-input-border bg-input px-4 py-3 text-left text-ink focus:outline-2 focus:outline-brand [&::-webkit-date-and-time-value]:text-left"
           />
           <input
             type="time"
             name="horaFim"
             required
             aria-label="Horário de fim"
-            className="w-full min-w-0 rounded-3xl border border-input-border bg-input px-4 py-3 text-ink focus:outline-2 focus:outline-brand"
+            className="min-h-[50px] w-full min-w-0 max-w-full appearance-none rounded-3xl border border-input-border bg-input px-4 py-3 text-left text-ink focus:outline-2 focus:outline-brand [&::-webkit-date-and-time-value]:text-left"
           />
         </div>
         <input
@@ -219,7 +219,7 @@ export function HorariosEditor({ horarios }: HorariosEditorProps) {
                 required
                 defaultValue={formatarHoraCurta(horarioEditando.horaInicio)}
                 aria-label="Horário de início"
-                className="w-full min-w-0 rounded-3xl border border-input-border bg-input px-4 py-3 text-ink focus:outline-2 focus:outline-brand"
+                className="min-h-[50px] w-full min-w-0 max-w-full appearance-none rounded-3xl border border-input-border bg-input px-4 py-3 text-left text-ink focus:outline-2 focus:outline-brand [&::-webkit-date-and-time-value]:text-left"
               />
               <input
                 type="time"
@@ -227,7 +227,7 @@ export function HorariosEditor({ horarios }: HorariosEditorProps) {
                 required
                 defaultValue={formatarHoraCurta(horarioEditando.horaFim)}
                 aria-label="Horário de fim"
-                className="w-full min-w-0 rounded-3xl border border-input-border bg-input px-4 py-3 text-ink focus:outline-2 focus:outline-brand"
+                className="min-h-[50px] w-full min-w-0 max-w-full appearance-none rounded-3xl border border-input-border bg-input px-4 py-3 text-left text-ink focus:outline-2 focus:outline-brand [&::-webkit-date-and-time-value]:text-left"
               />
             </div>
             <input
