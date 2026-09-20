@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { CalendarPlus } from "lucide-react";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { useMutacaoApi } from "@/hooks/useMutacaoApi";
+import { urlCalendarioAgendamento } from "@/utils/calendario";
 import { rotuloAgrupamentoData } from "@/utils/data";
 import { ESTILO_BADGE_STATUS, STATUS_LABEL } from "@/utils/statusAgendamento";
 import type { AgendamentoDetalhe } from "@/types/agendamento";
@@ -88,6 +90,13 @@ export function MeusAgendamentosList({ agendamentos }: MeusAgendamentosListProps
                       </span>
                     )}
                   </div>
+                  <a
+                    href={urlCalendarioAgendamento(agendamento.id)}
+                    className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-brand hover:underline"
+                  >
+                    <CalendarPlus size={16} />
+                    Adicionar ao calendário
+                  </a>
                 </div>
                 <div className="flex items-center gap-4 pl-2 sm:pl-0">
                   <div className="text-right">

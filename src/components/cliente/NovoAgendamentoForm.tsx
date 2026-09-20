@@ -2,23 +2,23 @@
 
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { Calendar, Check, ChevronLeft, ChevronRight, Download, Moon, Sun, Sunset } from "lucide-react";
+import { Calendar, CalendarPlus, Check, ChevronLeft, ChevronRight, Moon, Sun, Sunset } from "lucide-react";
 import { Select } from "@/components/ui/Select";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { useMutacaoApi } from "@/hooks/useMutacaoApi";
-import { formatarDataExtensa, hojeEmSaoPauloISO } from "@/utils/data";
+import {
+  dataLocalBrasil,
+  formatarDataExtensa,
+  formatarHoraDeMinutos,
+  hojeEmSaoPauloISO,
+  minutosDoDiaBrasil,
+} from "@/utils/data";
 import { formatarMoeda } from "@/utils/formatters";
-import { baixarArquivoICS, gerarLinkGoogleAgenda } from "@/utils/calendario";
+import { gerarLinkGoogleAgenda, urlCalendarioAgendamento } from "@/utils/calendario";
 import { formatarDataPacote, rotuloSessoes } from "@/utils/pacote";
+import type { AgendamentoDetalhe } from "@/types/agendamento";
 import type { SaldoServicoPacote } from "@/types/pacote";
 import type { Servico } from "@/types/servico";
-
-type EventoConfirmado = {
-  servicoNome: string;
-  dataISO: string;
-  horario: string;
-  duracaoMinutos: number;
-};
 
 const DIAS_ABREV = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 const MESES = [
@@ -72,7 +72,7 @@ export function NovoAgendamentoForm({ servicos, saldos }: NovoAgendamentoFormPro
   const [mesVisivel, setMesVisivel] = useState({ ano: base.ano, mes: base.mes });
   const { enviando: buscando, executar: executarBusca } = useMutacaoApi();
   const { enviando: salvando, executar: executarCriar } = useMutacaoApi();
-  const [eventoConfirmado, setEventoConfirmado] = useState<EventoConfirmado | null>(null);
+  const [agendamentoConfirmado, setAgendamentoConfirmado] = useState<AgendamentoDetalhe | null>(null);
 
   const servico = servicos.find((s) => s.id === servicoId) ?? null;
   const saldoDoServico = saldos.find((s) => s.servicoId === servicoId) ?? null;
@@ -127,30 +127,24 @@ export function NovoAgendamentoForm({ servicos, saldos }: NovoAgendamentoFormPro
       {
         mensagemSucesso: "Agendamento confirmado!",
         mensagemErroPadrao: "Não foi possível confirmar o agendamento.",
-        aoSucesso: () => {
-          const evento: EventoConfirmado = {
-            servicoNome: servico.nome,
-            dataISO: data,
-            horario,
-            duracaoMinutos: servico.duracaoMinutos,
-          };
-          // Dispara o download do .ics automaticamente — no celular, o
-          // sistema já oferece "Adicionar ao Calendário" para o arquivo.
-          // O Google Agenda fica como botão (abrir em nova aba costuma ser
-          // bloqueado pelo navegador se disparado fora de um clique direto).
-          baixarArquivoICS(evento);
-          setEventoConfirmado(evento);
+        aoSucesso: (resposta) => {
+          const { agendamento } = resposta as { agendamento: AgendamentoDetalhe };
+          setAgendamentoConfirmado(agendamento);
+          // Atualiza saldo de pacote e listas sem sair da tela de confirmação
+          router.refresh();
         },
       },
     );
   }
 
-  function irParaMeusAgendamentos() {
-    router.push("/cliente/meus-agendamentos");
-    router.refresh();
+  function agendarOutraSessao() {
+    setAgendamentoConfirmado(null);
+    setData("");
+    setHorario("");
+    setHorariosDisponiveis([]);
   }
 
-  if (eventoConfirmado) {
+  if (agendamentoConfirmado) {
     return (
       <div className="mx-auto flex max-w-lg flex-col items-center gap-6 rounded-3xl bg-cream-dark p-8 text-center">
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-brand text-white">
@@ -159,43 +153,52 @@ export function NovoAgendamentoForm({ servicos, saldos }: NovoAgendamentoFormPro
         <div>
           <h2 className="text-2xl font-semibold text-ink">Agendamento confirmado!</h2>
           <p className="mt-1 text-ink-muted">
-            {eventoConfirmado.servicoNome} · {formatarDataExtensa(eventoConfirmado.dataISO)} às{" "}
-            {eventoConfirmado.horario}
+            {agendamentoConfirmado.servicoNome} ·{" "}
+            {formatarDataExtensa(dataLocalBrasil(agendamentoConfirmado.dataHoraInicio))} às{" "}
+            {formatarHoraDeMinutos(minutosDoDiaBrasil(agendamentoConfirmado.dataHoraInicio))}
           </p>
         </div>
 
         <div className="flex w-full flex-col gap-3">
           <a
-            href={gerarLinkGoogleAgenda(eventoConfirmado)}
+            href={urlCalendarioAgendamento(agendamentoConfirmado.id)}
+            className="flex w-full items-center justify-center gap-2 rounded-full bg-brand py-4 text-lg font-bold text-white transition-opacity hover:opacity-90"
+          >
+            <CalendarPlus size={20} />
+            Adicionar ao calendário
+          </a>
+          <a
+            href={gerarLinkGoogleAgenda(agendamentoConfirmado)}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex w-full items-center justify-center gap-2 rounded-full bg-brand py-4 text-lg font-bold text-white transition-opacity hover:opacity-90"
+            className="flex w-full items-center justify-center gap-2 rounded-full border border-input-border py-4 text-lg font-bold text-ink transition-colors hover:bg-input"
           >
             <Calendar size={20} />
             Adicionar ao Google Agenda
           </a>
-          <button
-            type="button"
-            onClick={() => baixarArquivoICS(eventoConfirmado)}
-            className="flex w-full items-center justify-center gap-2 rounded-full border border-input-border py-4 text-lg font-bold text-ink transition-colors hover:bg-input"
-          >
-            <Download size={20} />
-            Baixar para o calendário do celular
-          </button>
         </div>
 
         <p className="text-xs text-ink-muted">
-          O arquivo do calendário já começou a baixar automaticamente. Toque nele para adicionar o
-          compromisso direto na agenda do seu celular.
+          No celular, o primeiro botão abre a agenda do aparelho já com o compromisso e um lembrete
+          1 hora antes; no computador, ele baixa um arquivo .ics.
         </p>
 
-        <button
-          type="button"
-          onClick={irParaMeusAgendamentos}
-          className="text-sm font-semibold text-brand hover:underline"
-        >
-          Ir para Meus Agendamentos
-        </button>
+        <div className="flex flex-col items-center gap-2">
+          <button
+            type="button"
+            onClick={agendarOutraSessao}
+            className="text-sm font-semibold text-brand hover:underline"
+          >
+            Agendar outra sessão
+          </button>
+          <button
+            type="button"
+            onClick={() => router.push("/cliente/meus-agendamentos")}
+            className="text-sm font-semibold text-brand hover:underline"
+          >
+            Ir para Meus Agendamentos
+          </button>
+        </div>
       </div>
     );
   }

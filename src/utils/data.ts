@@ -26,13 +26,6 @@ export function inicioDoDiaBrasil(dataISO: string): Date {
   return new Date(`${dataISO}T00:00:00${OFFSET_BRASIL}`);
 }
 
-// Instante exato (Date) de uma data+hora no fuso da clínica. Usado para
-// gerar eventos de calendário (Google Agenda / .ics) a partir dos campos
-// "data" (YYYY-MM-DD) e "horario" (HH:MM) do formulário de agendamento.
-export function dataHoraBrasil(dataISO: string, hora: string): Date {
-  return new Date(`${dataISO}T${hora}:00${OFFSET_BRASIL}`);
-}
-
 // Data (YYYY-MM-DD) no fuso da clínica a partir de um timestamp ISO em UTC.
 export function dataLocalBrasil(iso: string): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: FUSO_HORARIO }).format(new Date(iso));

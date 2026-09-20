@@ -138,6 +138,11 @@ export async function listarAgendamentosHistoricoCliente(
   return { agendamentos, temMais: result.rows.length > limite };
 }
 
+export async function obterAgendamentoPorId(id: string): Promise<AgendamentoDetalhe | null> {
+  const result = await pool.query<AgendamentoRow>(`${SELECT_BASE} WHERE a.id = $1`, [id]);
+  return result.rows[0] ? mapRow(result.rows[0]) : null;
+}
+
 export async function obterAgendamentoClienteId(id: string): Promise<string | null> {
   const result = await pool.query<{ cliente_id: string }>(
     "SELECT cliente_id FROM agendamentos WHERE id = $1",
