@@ -7,8 +7,8 @@ import type { PayloadSessao } from "@/types/auth";
 export type { Papel, PayloadSessao } from "@/types/auth";
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET);
-const DURACAO_SESSAO = "12h";
-const DURACAO_SESSAO_SEGUNDOS = 60 * 60 * 12;
+const DURACAO_SESSAO = "24h";
+const DURACAO_COOKIE_SEGUNDOS = 60 * 60 * 24 * 7;
 const CUSTO_BCRYPT = 12;
 
 export const NOME_COOKIE_SESSAO = "session";
@@ -70,7 +70,7 @@ export function definirCookieSessao(response: NextResponse, token: string): void
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
-    maxAge: DURACAO_SESSAO_SEGUNDOS,
+    maxAge: DURACAO_COOKIE_SEGUNDOS,
   });
 }
 

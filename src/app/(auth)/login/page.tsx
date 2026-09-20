@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { AuthLayout } from "@/components/auth/AuthLayout";
+import { AvisoSessaoExpirada } from "@/components/auth/AvisoSessaoExpirada";
 import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/TextField";
 import { toast } from "@/lib/toast";
@@ -95,6 +96,7 @@ export default function LoginPage() {
         </div>
       }
     >
+      <AvisoSessaoExpirada />
       <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
         <TextField
           id="email"

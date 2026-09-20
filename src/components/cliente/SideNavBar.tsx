@@ -35,7 +35,7 @@ export function SideNavBar({ nomeCliente }: SideNavBarProps) {
       <div className="flex flex-col gap-8">
         <div className="flex items-center gap-3 px-2">
           <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-cream drop-shadow-[0px_1px_1px_rgba(0,0,0,0.05)]">
-            <Image src="/icons/logo-leaf.svg" alt="" width={17} height={17} />
+            <Image src="/images/logo/logo-lotus.png" alt="" width={26} height={26} />
           </div>
           <span className="text-xl font-extrabold tracking-tight text-brand">Agenda+</span>
         </div>
@@ -94,7 +94,7 @@ export function SideNavBar({ nomeCliente }: SideNavBarProps) {
       <header className="flex items-center justify-between border-b border-input-border bg-cream-dark px-4 py-3 lg:hidden">
         <div className="flex items-center gap-2">
           <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-cream">
-            <Image src="/icons/logo-leaf.svg" alt="" width={15} height={15} />
+            <Image src="/images/logo/logo-lotus.png" alt="" width={22} height={22} />
           </div>
           <span className="text-lg font-extrabold tracking-tight text-brand">Agenda+</span>
         </div>

@@ -27,7 +27,7 @@ export function AuthLayout({ subtitle, footer, children }: AuthLayoutProps) {
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-3">
               <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-cream-dark drop-shadow-[0px_1px_1px_rgba(0,0,0,0.05)]">
-                <Image src="/icons/logo-leaf.svg" alt="" width={17} height={17} />
+                <Image src="/images/logo/logo-lotus.png" alt="" width={26} height={26} />
               </div>
               <h1 className="text-3xl leading-9 font-extrabold tracking-tight text-brand">
                 Agenda+

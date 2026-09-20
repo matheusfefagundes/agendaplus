@@ -11,7 +11,7 @@ const manrope = Manrope({
 export const metadata: Metadata = {
   title: "Agenda+",
   icons: {
-    icon: "/icons/logo-leaf.svg",
+    icon: "/images/logo/logo-lotus.png",
   },
   description: "Sistema de agendamento online para clínica de massoterapia e estética.",
 };
