@@ -78,9 +78,16 @@ export function MeusAgendamentosList({ agendamentos }: MeusAgendamentosListProps
                 />
                 <div className="pl-2">
                   <h4 className="text-lg font-bold text-ink">{agendamento.servicoNome}</h4>
-                  <span className={`mt-1 inline-block rounded-full px-3 py-1 text-xs font-semibold ${estilo.bg} ${estilo.text}`}>
-                    {STATUS_LABEL[agendamento.status]}
-                  </span>
+                  <div className="mt-1 flex flex-wrap items-center gap-2">
+                    <span className={`inline-block rounded-full px-3 py-1 text-xs font-semibold ${estilo.bg} ${estilo.text}`}>
+                      {STATUS_LABEL[agendamento.status]}
+                    </span>
+                    {agendamento.pacoteClienteId && (
+                      <span className="inline-block rounded-full bg-input px-3 py-1 text-xs font-semibold text-brand">
+                        Pacote
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-center gap-4 pl-2 sm:pl-0">
                   <div className="text-right">
@@ -108,7 +115,9 @@ export function MeusAgendamentosList({ agendamentos }: MeusAgendamentosListProps
         title="Cancelar agendamento"
         message={
           paraCancelar
-            ? `Tem certeza que deseja cancelar "${paraCancelar.servicoNome}"? Essa ação não pode ser desfeita.`
+            ? `Tem certeza que deseja cancelar "${paraCancelar.servicoNome}"? Essa ação não pode ser desfeita.${
+                paraCancelar.pacoteClienteId ? " A sessão volta para o seu pacote." : ""
+              }`
             : ""
         }
         confirmLabel="Cancelar agendamento"

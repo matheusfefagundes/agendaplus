@@ -9,6 +9,8 @@ import { DatePicker } from "@/components/ui/DatePicker";
 import { Select } from "@/components/ui/Select";
 import { useMutacaoApi } from "@/hooks/useMutacaoApi";
 import { hojeEmSaoPauloISO } from "@/utils/data";
+import { calcularSaldoPorServico, formatarDataPacote, rotuloSessoes } from "@/utils/pacote";
+import type { PacoteCliente } from "@/types/pacote";
 import type { Servico } from "@/types/servico";
 
 type AgendarModalProps = {
@@ -17,9 +19,17 @@ type AgendarModalProps = {
   clienteId: string;
   clienteNome: string;
   servicos: Servico[];
+  pacotesDoCliente: PacoteCliente[];
 };
 
-export function AgendarModal({ open, onClose, clienteId, clienteNome, servicos }: AgendarModalProps) {
+export function AgendarModal({
+  open,
+  onClose,
+  clienteId,
+  clienteNome,
+  servicos,
+  pacotesDoCliente,
+}: AgendarModalProps) {
   const router = useRouter();
   const [servicoId, setServicoId] = useState("");
   const [data, setData] = useState("");
@@ -27,6 +37,8 @@ export function AgendarModal({ open, onClose, clienteId, clienteNome, servicos }
   const [horariosDisponiveis, setHorariosDisponiveis] = useState<string[]>([]);
   const { enviando: buscando, executar: executarBusca } = useMutacaoApi();
   const { enviando: salvando, executar: executarCriar } = useMutacaoApi();
+
+  const saldoDoServico = calcularSaldoPorServico(pacotesDoCliente).find((s) => s.servicoId === servicoId);
 
   async function buscarHorarios(novoServicoId: string, novaData: string) {
     setHorario("");
@@ -93,6 +105,13 @@ export function AgendarModal({ open, onClose, clienteId, clienteNome, servicos }
             label: `${servico.nome} (${servico.duracaoMinutos} min)`,
           }))}
         />
+
+        {saldoDoServico && (
+          <p className="rounded-2xl bg-cream-dark px-4 py-3 text-sm text-ink">
+            Este cliente tem pacote deste serviço: {rotuloSessoes(saldoDoServico.sessoesRestantes)} restantes
+            (vence em {formatarDataPacote(saldoDoServico.expiraEm)}). Esta sessão será descontada do pacote.
+          </p>
+        )}
 
         <DatePicker
           id="data"

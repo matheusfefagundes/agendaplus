@@ -20,12 +20,26 @@ export async function obterResumoDashboard(): Promise<ResumoDashboard> {
        JOIN usuarios u ON u.id = c.usuario_id
        WHERE u.created_at >= date_trunc('week', now())`,
     ),
+    // Sessões pagas por pacote não entram a preço cheio: o dinheiro é
+    // contabilizado uma vez, na semana em que o pacote foi vendido.
     pool.query<{ total: string | null }>(
-      `SELECT SUM(s.valor)::text AS total
-       FROM agendamentos a
-       JOIN servicos s ON s.id = a.servico_id
-       WHERE a.data_hora_inicio >= date_trunc('week', now())
-         AND a.status IN ('confirmado', 'concluido')`,
+      `SELECT (
+         COALESCE((
+           SELECT SUM(s.valor)
+           FROM agendamentos a
+           JOIN servicos s ON s.id = a.servico_id
+           WHERE a.data_hora_inicio >= date_trunc('week', now())
+             AND a.status IN ('confirmado', 'concluido')
+             AND a.pacote_cliente_id IS NULL
+         ), 0)
+         +
+         COALESCE((
+           SELECT SUM(pc.valor)
+           FROM pacotes_cliente pc
+           WHERE pc.created_at >= date_trunc('week', now())
+             AND pc.ativo = true
+         ), 0)
+       )::text AS total`,
     ),
   ]);
 

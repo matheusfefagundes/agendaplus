@@ -11,8 +11,6 @@ type EventoAgendamento = {
 };
 
 function formatarDataUTC(data: Date): string {
-  // Formato exigido pelo Google Calendar e pelo padrão iCalendar (RFC 5545):
-  // AAAAMMDDTHHMMSSZ, sempre em UTC.
   return data.toISOString().replace(/[-:]|\.\d{3}/g, "");
 }
 
@@ -22,8 +20,6 @@ function intervaloEvento({ dataISO, horario, duracaoMinutos }: EventoAgendamento
   return { inicio, fim };
 }
 
-// Link do Google Calendar: não precisa de OAuth nem de nenhuma
-// permissão extra do usuário, só abre a tela de "criar evento" já preenchida.
 export function gerarLinkGoogleAgenda(evento: EventoAgendamento): string {
   const { inicio, fim } = intervaloEvento(evento);
 
@@ -38,9 +34,6 @@ export function gerarLinkGoogleAgenda(evento: EventoAgendamento): string {
   return `https://calendar.google.com/calendar/render?${params.toString()}`;
 }
 
-// Arquivo .ics: abre direto no app de calendário nativo do celular
-// (Agenda do Android, Calendário do iOS) ou em qualquer outro cliente
-// (Outlook, Apple Calendar), sem depender de conta Google.
 export function gerarConteudoICS(evento: EventoAgendamento): string {
   const { inicio, fim } = intervaloEvento(evento);
   const uid = `${inicio.getTime()}-${Math.random().toString(36).slice(2, 10)}@agendaplus`;
@@ -65,12 +58,9 @@ export function gerarConteudoICS(evento: EventoAgendamento): string {
     "END:VCALENDAR",
   ].filter((linha): linha is string => linha !== null);
 
-  // Quebra de linha CRLF é exigida pelo formato iCalendar (RFC 5545).
   return linhas.join("\r\n");
 }
 
-// Dispara o download do .ics no navegador do cliente. Em celular, o próprio
-// sistema operacional oferece "Abrir no Calendário" para o arquivo baixado.
 export function baixarArquivoICS(evento: EventoAgendamento): void {
   const conteudo = gerarConteudoICS(evento);
   const blob = new Blob([conteudo], { type: "text/calendar;charset=utf-8" });

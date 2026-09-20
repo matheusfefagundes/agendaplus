@@ -47,6 +47,64 @@ export const servicoUpdateSchema = z
   })
   .strict();
 
+export const pacoteSchema = z
+  .object({
+    servicoId: z.string().uuid("Serviço inválido."),
+    quantidadeSessoes: z
+      .number()
+      .int("A quantidade de sessões precisa ser um número inteiro.")
+      .positive("A quantidade de sessões precisa ser maior que zero.")
+      .max(1000),
+    valor: z.number().nonnegative("O valor não pode ser negativo."),
+    validadeDias: z
+      .number()
+      .int("A validade precisa ser um número inteiro de dias.")
+      .positive("A validade precisa ser maior que zero.")
+      .max(3650),
+  })
+  .strict();
+
+export const pacoteUpdateSchema = z
+  .object({
+    servicoId: z.string().uuid("Serviço inválido.").optional(),
+    quantidadeSessoes: z
+      .number()
+      .int("A quantidade de sessões precisa ser um número inteiro.")
+      .positive("A quantidade de sessões precisa ser maior que zero.")
+      .max(1000)
+      .optional(),
+    valor: z.number().nonnegative("O valor não pode ser negativo.").optional(),
+    validadeDias: z
+      .number()
+      .int("A validade precisa ser um número inteiro de dias.")
+      .positive("A validade precisa ser maior que zero.")
+      .max(3650)
+      .optional(),
+    ativo: z.boolean().optional(),
+  })
+  .strict();
+
+export const atribuirPacoteSchema = z
+  .object({
+    pacoteId: z.string().uuid("Pacote inválido."),
+  })
+  .strict();
+
+export const pacoteClienteUpdateSchema = z
+  .object({
+    quantidadeSessoes: z
+      .number()
+      .int("A quantidade de sessões precisa ser um número inteiro.")
+      .positive("A quantidade de sessões precisa ser maior que zero.")
+      .max(1000, "A quantidade de sessões é grande demais.")
+      .optional(),
+    ativo: z.literal(false, { message: "Só é possível cancelar o pacote." }).optional(),
+  })
+  .strict()
+  .refine((data) => data.quantidadeSessoes !== undefined || data.ativo !== undefined, {
+    message: "Informe o que deseja alterar no pacote.",
+  });
+
 export const clienteUpdateSchema = z
   .object({
     telefone: z.string().trim().max(20).nullable().optional(),

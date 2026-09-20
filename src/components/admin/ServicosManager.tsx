@@ -75,7 +75,7 @@ export function ServicosManager({ servicos }: ServicosManagerProps) {
           body: JSON.stringify(payload),
         }),
       {
-        mensagemSucesso: servicoEditando ? "Serviço atualizado." : "Serviço criado.",
+        mensagemSucesso: servicoEditando ? "Serviço atualizado com sucesso." : "Serviço criado com sucesso.",
         mensagemErroPadrao: "Não foi possível salvar o serviço.",
         aoSucesso: () => {
           setModalAberto(false);

@@ -2,15 +2,24 @@
 
 import { useRouter } from "next/navigation";
 import { useMemo, useState, type ChangeEvent, type FormEvent } from "react";
-import { CalendarPlus, ChevronLeft, ChevronRight, MessageCircle, Search } from "lucide-react";
+import { CalendarPlus, ChevronLeft, ChevronRight, MessageCircle, Package, Search } from "lucide-react";
 import { TextField } from "@/components/ui/TextField";
 import { Textarea } from "@/components/ui/Textarea";
 import { Button } from "@/components/ui/Button";
 import { AgendarModal } from "@/components/admin/AgendarModal";
+import { AtribuirPacoteModal } from "@/components/admin/AtribuirPacoteModal";
+import { AjustarSessoesModal } from "@/components/admin/AjustarSessoesModal";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { useMutacaoApi } from "@/hooks/useMutacaoApi";
 import { linkWhatsapp, mascararTelefone, somenteDigitos } from "@/utils/telefone";
+import {
+  ESTILO_BADGE_SITUACAO_PACOTE,
+  formatarDataPacote,
+  rotuloRestantes,
+  SITUACAO_PACOTE_LABEL,
+} from "@/utils/pacote";
 import type { ClienteDetalhe } from "@/types/cliente";
+import type { Pacote, PacoteCliente } from "@/types/pacote";
 import type { Servico } from "@/types/servico";
 
 const CLIENTES_POR_PAGINA = 10;
@@ -18,18 +27,24 @@ const CLIENTES_POR_PAGINA = 10;
 type ClientesManagerProps = {
   clientes: ClienteDetalhe[];
   servicos: Servico[];
+  pacotes: Pacote[];
+  pacotesPorCliente: Record<string, PacoteCliente[]>;
 };
 
-export function ClientesManager({ clientes, servicos }: ClientesManagerProps) {
+export function ClientesManager({ clientes, servicos, pacotes, pacotesPorCliente }: ClientesManagerProps) {
   const router = useRouter();
   const [busca, setBusca] = useState("");
   const [buscaAnterior, setBuscaAnterior] = useState(busca);
   const [pagina, setPagina] = useState(1);
   const [selecionadoId, setSelecionadoId] = useState<string | null>(clientes[0]?.id ?? null);
   const [agendarAberto, setAgendarAberto] = useState(false);
+  const [atribuirAberto, setAtribuirAberto] = useState(false);
+  const [pacoteParaCancelar, setPacoteParaCancelar] = useState<PacoteCliente | null>(null);
+  const [pacoteParaAjustar, setPacoteParaAjustar] = useState<PacoteCliente | null>(null);
   const [confirmarDesativar, setConfirmarDesativar] = useState(false);
   const { enviando, executar: executarSalvar } = useMutacaoApi();
   const { enviando: desativando, executar: executarAlternar } = useMutacaoApi();
+  const { enviando: cancelandoPacote, executar: executarCancelarPacote } = useMutacaoApi();
 
   const filtrados = useMemo(() => {
     const termo = busca.trim().toLowerCase();
@@ -55,6 +70,27 @@ export function ClientesManager({ clientes, servicos }: ClientesManagerProps) {
   }, [filtrados, pagina]);
 
   const selecionado = clientes.find((c) => c.id === selecionadoId) ?? paginados[0] ?? null;
+  const pacotesDoSelecionado = selecionado ? (pacotesPorCliente[selecionado.id] ?? []) : [];
+
+  async function confirmarCancelamentoPacote() {
+    if (!selecionado || !pacoteParaCancelar) return;
+    await executarCancelarPacote(
+      () =>
+        fetch(`/api/clientes/${selecionado.id}/pacotes/${pacoteParaCancelar.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ativo: false }),
+        }),
+      {
+        mensagemSucesso: "Pacote cancelado.",
+        mensagemErroPadrao: "Não foi possível cancelar o pacote.",
+        aoSucesso: () => {
+          setPacoteParaCancelar(null);
+          router.refresh();
+        },
+      },
+    );
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -245,6 +281,70 @@ export function ClientesManager({ clientes, servicos }: ClientesManagerProps) {
                 )}
               </div>
 
+              <div className="flex flex-col gap-3 rounded-2xl bg-cream p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <h3 className="flex items-center gap-2 text-sm font-bold text-ink">
+                    <Package size={16} />
+                    Pacotes
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => setAtribuirAberto(true)}
+                    className="rounded-full border border-input-border px-4 py-1.5 text-sm font-medium text-ink hover:bg-input"
+                  >
+                    Atribuir pacote
+                  </button>
+                </div>
+
+                {pacotesDoSelecionado.length === 0 ? (
+                  <p className="text-sm text-ink-muted">Nenhum pacote atribuído.</p>
+                ) : (
+                  <ul className="flex flex-col gap-2">
+                    {pacotesDoSelecionado.map((pacote) => {
+                      const estilo = ESTILO_BADGE_SITUACAO_PACOTE[pacote.situacao];
+                      return (
+                        <li
+                          key={pacote.id}
+                          className="flex items-start justify-between gap-3 rounded-xl bg-cream-dark px-3 py-2 text-sm"
+                        >
+                          <div className="min-w-0">
+                            <p className="truncate font-medium text-ink">{pacote.servicoNome}</p>
+                            <p className="text-ink-muted">
+                              {rotuloRestantes(pacote)} · vence em {formatarDataPacote(pacote.expiraEm)}
+                            </p>
+                          </div>
+                          <div className="flex shrink-0 flex-col items-end gap-1">
+                            <span
+                              className={`rounded-full px-2 py-0.5 text-xs font-semibold ${estilo.bg} ${estilo.text}`}
+                            >
+                              {SITUACAO_PACOTE_LABEL[pacote.situacao]}
+                            </span>
+                            {pacote.ativo && (
+                              <div className="flex items-center gap-3">
+                                <button
+                                  type="button"
+                                  onClick={() => setPacoteParaAjustar(pacote)}
+                                  className="text-xs font-medium text-ink-muted hover:text-ink"
+                                >
+                                  Ajustar sessões
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setPacoteParaCancelar(pacote)}
+                                  className="text-xs font-medium text-ink-muted hover:text-danger"
+                                >
+                                  Cancelar
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+
               <TextField
                 id="telefone"
                 name="telefone"
@@ -276,8 +376,37 @@ export function ClientesManager({ clientes, servicos }: ClientesManagerProps) {
           clienteId={selecionado.id}
           clienteNome={selecionado.nome}
           servicos={servicos}
+          pacotesDoCliente={pacotesDoSelecionado}
         />
       )}
+
+      {selecionado && (
+        <AtribuirPacoteModal
+          open={atribuirAberto}
+          onClose={() => setAtribuirAberto(false)}
+          clienteId={selecionado.id}
+          clienteNome={selecionado.nome}
+          pacotes={pacotes}
+        />
+      )}
+
+      <AjustarSessoesModal pacote={pacoteParaAjustar} onClose={() => setPacoteParaAjustar(null)} />
+
+      <ConfirmModal
+        open={pacoteParaCancelar !== null}
+        title="Cancelar pacote"
+        message={
+          pacoteParaCancelar
+            ? `Tem certeza que deseja cancelar o pacote de "${pacoteParaCancelar.servicoNome}"? As ${pacoteParaCancelar.sessoesRestantes} sessões restantes deixarão de poder ser usadas. Agendamentos já feitos com ele continuam valendo.`
+            : ""
+        }
+        confirmLabel="Cancelar pacote"
+        confirmingLabel="Cancelando..."
+        cancelLabel="Voltar"
+        confirming={cancelandoPacote}
+        onConfirm={confirmarCancelamentoPacote}
+        onCancel={() => setPacoteParaCancelar(null)}
+      />
 
       <ConfirmModal
         open={confirmarDesativar}

@@ -1,4 +1,5 @@
 import { pool } from "@/db/client";
+import { selecionarPacoteParaConsumo } from "@/services/pacote-cliente.service";
 import {
   adicionarDias,
   diaDaSemana,
@@ -27,6 +28,7 @@ type AgendamentoRow = {
   data_hora_fim: Date;
   status: StatusAgendamento;
   observacoes: string | null;
+  pacote_cliente_id: string | null;
 };
 
 function mapRow(row: AgendamentoRow): AgendamentoDetalhe {
@@ -41,12 +43,14 @@ function mapRow(row: AgendamentoRow): AgendamentoDetalhe {
     dataHoraFim: row.data_hora_fim.toISOString(),
     status: row.status,
     observacoes: row.observacoes,
+    pacoteClienteId: row.pacote_cliente_id,
   };
 }
 
 const SELECT_BASE = `
   SELECT a.id, a.cliente_id, u.nome AS cliente_nome, a.servico_id, s.nome AS servico_nome,
-         s.duracao_minutos, a.data_hora_inicio, a.data_hora_fim, a.status, a.observacoes
+         s.duracao_minutos, a.data_hora_inicio, a.data_hora_fim, a.status, a.observacoes,
+         a.pacote_cliente_id
   FROM agendamentos a
   JOIN clientes c ON c.id = a.cliente_id
   JOIN usuarios u ON u.id = c.usuario_id
@@ -284,19 +288,36 @@ export async function criarAgendamento(input: {
   const dataHoraInicio = new Date(`${input.data}T${input.horario}:00-03:00`);
   const dataHoraFim = new Date(dataHoraInicio.getTime() + duracao * 60_000);
 
+  // Transação: o consumo da sessão do pacote e o INSERT do agendamento são
+  // atômicos — se o horário estiver ocupado (23P01) o rollback desfaz tudo.
+  const client = await pool.connect();
   try {
-    const result = await pool.query<{ id: string }>(
-      `INSERT INTO agendamentos (cliente_id, servico_id, data_hora_inicio, data_hora_fim, status, observacoes)
-       VALUES ($1, $2, $3, $4, 'confirmado', $5)
+    await client.query("BEGIN");
+    const pacoteClienteId = await selecionarPacoteParaConsumo(client, input.clienteId, input.servicoId);
+    const result = await client.query<{ id: string }>(
+      `INSERT INTO agendamentos (cliente_id, servico_id, data_hora_inicio, data_hora_fim, status, observacoes, pacote_cliente_id)
+       VALUES ($1, $2, $3, $4, 'confirmado', $5, $6)
        RETURNING id`,
-      [input.clienteId, input.servicoId, dataHoraInicio, dataHoraFim, input.observacoes ?? null],
+      [
+        input.clienteId,
+        input.servicoId,
+        dataHoraInicio,
+        dataHoraFim,
+        input.observacoes ?? null,
+        pacoteClienteId,
+      ],
     );
+    await client.query("COMMIT");
+
     const row = await pool.query<AgendamentoRow>(`${SELECT_BASE} WHERE a.id = $1`, [result.rows[0].id]);
     return mapRow(row.rows[0]);
   } catch (error) {
+    await client.query("ROLLBACK").catch(() => undefined);
     if (error && typeof error === "object" && "code" in error && error.code === "23P01") {
       throw new HorarioIndisponivelError("Esse horário acabou de ser reservado. Escolha outro horário.");
     }
     throw error;
+  } finally {
+    client.release();
   }
 }
