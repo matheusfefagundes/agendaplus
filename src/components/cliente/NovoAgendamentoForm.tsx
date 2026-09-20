@@ -2,13 +2,21 @@
 
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { Check, ChevronLeft, ChevronRight, Moon, Sun, Sunset } from "lucide-react";
+import { Calendar, Check, ChevronLeft, ChevronRight, Download, Moon, Sun, Sunset } from "lucide-react";
 import { Select } from "@/components/ui/Select";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { useMutacaoApi } from "@/hooks/useMutacaoApi";
 import { formatarDataExtensa, hojeEmSaoPauloISO } from "@/utils/data";
 import { formatarMoeda } from "@/utils/formatters";
+import { baixarArquivoICS, gerarLinkGoogleAgenda } from "@/utils/calendario";
 import type { Servico } from "@/types/servico";
+
+type EventoConfirmado = {
+  servicoNome: string;
+  dataISO: string;
+  horario: string;
+  duracaoMinutos: number;
+};
 
 const DIAS_ABREV = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 const MESES = [
@@ -61,6 +69,7 @@ export function NovoAgendamentoForm({ servicos }: NovoAgendamentoFormProps) {
   const [mesVisivel, setMesVisivel] = useState({ ano: base.ano, mes: base.mes });
   const { enviando: buscando, executar: executarBusca } = useMutacaoApi();
   const { enviando: salvando, executar: executarCriar } = useMutacaoApi();
+  const [eventoConfirmado, setEventoConfirmado] = useState<EventoConfirmado | null>(null);
 
   const servico = servicos.find((s) => s.id === servicoId) ?? null;
 
@@ -102,6 +111,8 @@ export function NovoAgendamentoForm({ servicos }: NovoAgendamentoFormProps) {
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
+    if (!servico) return;
+
     await executarCriar(
       () =>
         fetch("/api/agendamentos", {
@@ -113,10 +124,75 @@ export function NovoAgendamentoForm({ servicos }: NovoAgendamentoFormProps) {
         mensagemSucesso: "Agendamento confirmado!",
         mensagemErroPadrao: "Não foi possível confirmar o agendamento.",
         aoSucesso: () => {
-          router.push("/cliente/meus-agendamentos");
-          router.refresh();
+          const evento: EventoConfirmado = {
+            servicoNome: servico.nome,
+            dataISO: data,
+            horario,
+            duracaoMinutos: servico.duracaoMinutos,
+          };
+          // Dispara o download do .ics automaticamente — no celular, o
+          // sistema já oferece "Adicionar ao Calendário" para o arquivo.
+          // O Google Agenda fica como botão (abrir em nova aba costuma ser
+          // bloqueado pelo navegador se disparado fora de um clique direto).
+          baixarArquivoICS(evento);
+          setEventoConfirmado(evento);
         },
       },
+    );
+  }
+
+  function irParaMeusAgendamentos() {
+    router.push("/cliente/meus-agendamentos");
+    router.refresh();
+  }
+
+  if (eventoConfirmado) {
+    return (
+      <div className="mx-auto flex max-w-lg flex-col items-center gap-6 rounded-3xl bg-cream-dark p-8 text-center">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-brand text-white">
+          <Check size={28} />
+        </div>
+        <div>
+          <h2 className="text-2xl font-semibold text-ink">Agendamento confirmado!</h2>
+          <p className="mt-1 text-ink-muted">
+            {eventoConfirmado.servicoNome} · {formatarDataExtensa(eventoConfirmado.dataISO)} às{" "}
+            {eventoConfirmado.horario}
+          </p>
+        </div>
+
+        <div className="flex w-full flex-col gap-3">
+          <a
+            href={gerarLinkGoogleAgenda(eventoConfirmado)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex w-full items-center justify-center gap-2 rounded-full bg-brand py-4 text-lg font-bold text-white transition-opacity hover:opacity-90"
+          >
+            <Calendar size={20} />
+            Adicionar ao Google Agenda
+          </a>
+          <button
+            type="button"
+            onClick={() => baixarArquivoICS(eventoConfirmado)}
+            className="flex w-full items-center justify-center gap-2 rounded-full border border-input-border py-4 text-lg font-bold text-ink transition-colors hover:bg-input"
+          >
+            <Download size={20} />
+            Baixar para o calendário do celular
+          </button>
+        </div>
+
+        <p className="text-xs text-ink-muted">
+          O arquivo do calendário já começou a baixar automaticamente. Toque nele para adicionar o
+          compromisso direto na agenda do seu celular.
+        </p>
+
+        <button
+          type="button"
+          onClick={irParaMeusAgendamentos}
+          className="text-sm font-semibold text-brand hover:underline"
+        >
+          Ir para Meus Agendamentos
+        </button>
+      </div>
     );
   }
 
