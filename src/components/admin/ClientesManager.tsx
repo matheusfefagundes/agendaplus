@@ -2,13 +2,13 @@
 
 import { useRouter } from "next/navigation";
 import { useMemo, useState, type ChangeEvent, type FormEvent } from "react";
-import { CalendarPlus, ChevronLeft, ChevronRight, MessageCircle, Package, Search } from "lucide-react";
+import { CalendarPlus, ChevronLeft, ChevronRight, MessageCircle, Package, Pencil, Search } from "lucide-react";
 import { TextField } from "@/components/ui/TextField";
 import { Textarea } from "@/components/ui/Textarea";
 import { Button } from "@/components/ui/Button";
 import { AgendarModal } from "@/components/admin/AgendarModal";
 import { AtribuirPacoteModal } from "@/components/admin/AtribuirPacoteModal";
-import { AjustarSessoesModal } from "@/components/admin/AjustarSessoesModal";
+import { EditarPacoteModal } from "@/components/admin/EditarPacoteModal";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { useMutacaoApi } from "@/hooks/useMutacaoApi";
 import { linkWhatsapp, mascararTelefone, somenteDigitos } from "@/utils/telefone";
@@ -40,7 +40,7 @@ export function ClientesManager({ clientes, servicos, pacotes, pacotesPorCliente
   const [agendarAberto, setAgendarAberto] = useState(false);
   const [atribuirAberto, setAtribuirAberto] = useState(false);
   const [pacoteParaCancelar, setPacoteParaCancelar] = useState<PacoteCliente | null>(null);
-  const [pacoteParaAjustar, setPacoteParaAjustar] = useState<PacoteCliente | null>(null);
+  const [pacoteParaEditar, setPacoteParaEditar] = useState<PacoteCliente | null>(null);
   const [confirmarDesativar, setConfirmarDesativar] = useState(false);
   const { enviando, executar: executarSalvar } = useMutacaoApi();
   const { enviando: desativando, executar: executarAlternar } = useMutacaoApi();
@@ -313,29 +313,21 @@ export function ClientesManager({ clientes, servicos, pacotes, pacotesPorCliente
                               {rotuloRestantes(pacote)} · vence em {formatarDataPacote(pacote.expiraEm)}
                             </p>
                           </div>
-                          <div className="flex shrink-0 flex-col items-end gap-1">
+                          <div className="flex shrink-0 flex-col items-stretch gap-1.5 text-center">
                             <span
                               className={`rounded-full px-2 py-0.5 text-xs font-semibold ${estilo.bg} ${estilo.text}`}
                             >
                               {SITUACAO_PACOTE_LABEL[pacote.situacao]}
                             </span>
                             {pacote.ativo && (
-                              <div className="flex items-center gap-3">
-                                <button
-                                  type="button"
-                                  onClick={() => setPacoteParaAjustar(pacote)}
-                                  className="text-xs font-medium text-ink-muted hover:text-ink"
-                                >
-                                  Ajustar sessões
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => setPacoteParaCancelar(pacote)}
-                                  className="text-xs font-medium text-ink-muted hover:text-danger"
-                                >
-                                  Cancelar
-                                </button>
-                              </div>
+                              <button
+                                type="button"
+                                onClick={() => setPacoteParaEditar(pacote)}
+                                className="flex items-center justify-center gap-1 rounded-full bg-input px-2 py-0.5 text-xs font-semibold text-ink transition-opacity hover:opacity-80"
+                              >
+                                <Pencil size={12} />
+                                Editar
+                              </button>
                             )}
                           </div>
                         </li>
@@ -390,7 +382,14 @@ export function ClientesManager({ clientes, servicos, pacotes, pacotesPorCliente
         />
       )}
 
-      <AjustarSessoesModal pacote={pacoteParaAjustar} onClose={() => setPacoteParaAjustar(null)} />
+      <EditarPacoteModal
+        pacote={pacoteParaEditar}
+        onClose={() => setPacoteParaEditar(null)}
+        onCancelarPacote={(pacote) => {
+          setPacoteParaEditar(null);
+          setPacoteParaCancelar(pacote);
+        }}
+      />
 
       <ConfirmModal
         open={pacoteParaCancelar !== null}

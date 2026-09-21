@@ -20,18 +20,6 @@ function formatarDataUTC(iso: string): string {
   return new Date(iso).toISOString().replace(/[-:]|\.\d{3}/g, "");
 }
 
-export function gerarLinkGoogleAgenda(evento: EventoCalendario): string {
-  const params = new URLSearchParams({
-    action: "TEMPLATE",
-    text: tituloEvento(evento),
-    dates: `${formatarDataUTC(evento.dataHoraInicio)}/${formatarDataUTC(evento.dataHoraFim)}`,
-    details: evento.observacoes || "Agendamento confirmado pelo Agenda+.",
-    location: NOME_LOCAL,
-  });
-
-  return `https://calendar.google.com/calendar/render?${params.toString()}`;
-}
-
 function escaparTexto(texto: string): string {
   return texto
     .replace(/\\/g, "\\\\")

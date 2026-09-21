@@ -2,19 +2,13 @@
 
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { Calendar, CalendarPlus, Check, ChevronLeft, ChevronRight, Moon, Sun, Sunset } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Moon, Sun, Sunset } from "lucide-react";
 import { Select } from "@/components/ui/Select";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { useMutacaoApi } from "@/hooks/useMutacaoApi";
-import {
-  dataLocalBrasil,
-  formatarDataExtensa,
-  formatarHoraDeMinutos,
-  hojeEmSaoPauloISO,
-  minutosDoDiaBrasil,
-} from "@/utils/data";
+import { formatarDataExtensa, hojeEmSaoPauloISO } from "@/utils/data";
 import { formatarMoeda } from "@/utils/formatters";
-import { gerarLinkGoogleAgenda, urlCalendarioAgendamento } from "@/utils/calendario";
+import { urlCalendarioAgendamento } from "@/utils/calendario";
 import { formatarDataPacote, rotuloSessoes } from "@/utils/pacote";
 import type { AgendamentoDetalhe } from "@/types/agendamento";
 import type { SaldoServicoPacote } from "@/types/pacote";
@@ -72,7 +66,6 @@ export function NovoAgendamentoForm({ servicos, saldos }: NovoAgendamentoFormPro
   const [mesVisivel, setMesVisivel] = useState({ ano: base.ano, mes: base.mes });
   const { enviando: buscando, executar: executarBusca } = useMutacaoApi();
   const { enviando: salvando, executar: executarCriar } = useMutacaoApi();
-  const [agendamentoConfirmado, setAgendamentoConfirmado] = useState<AgendamentoDetalhe | null>(null);
 
   const servico = servicos.find((s) => s.id === servicoId) ?? null;
   const saldoDoServico = saldos.find((s) => s.servicoId === servicoId) ?? null;
@@ -129,77 +122,13 @@ export function NovoAgendamentoForm({ servicos, saldos }: NovoAgendamentoFormPro
         mensagemErroPadrao: "Não foi possível confirmar o agendamento.",
         aoSucesso: (resposta) => {
           const { agendamento } = resposta as { agendamento: AgendamentoDetalhe };
-          setAgendamentoConfirmado(agendamento);
-          // Atualiza saldo de pacote e listas sem sair da tela de confirmação
+          // Abre o calendário do aparelho já com o compromisso (o celular sempre
+          // pede um toque para confirmar) e segue para a lista de agendamentos.
+          window.location.assign(urlCalendarioAgendamento(agendamento.id));
+          router.push("/cliente/meus-agendamentos");
           router.refresh();
         },
       },
-    );
-  }
-
-  function agendarOutraSessao() {
-    setAgendamentoConfirmado(null);
-    setData("");
-    setHorario("");
-    setHorariosDisponiveis([]);
-  }
-
-  if (agendamentoConfirmado) {
-    return (
-      <div className="mx-auto flex max-w-lg flex-col items-center gap-6 rounded-3xl bg-cream-dark p-8 text-center">
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-brand text-white">
-          <Check size={28} />
-        </div>
-        <div>
-          <h2 className="text-2xl font-semibold text-ink">Agendamento confirmado!</h2>
-          <p className="mt-1 text-ink-muted">
-            {agendamentoConfirmado.servicoNome} ·{" "}
-            {formatarDataExtensa(dataLocalBrasil(agendamentoConfirmado.dataHoraInicio))} às{" "}
-            {formatarHoraDeMinutos(minutosDoDiaBrasil(agendamentoConfirmado.dataHoraInicio))}
-          </p>
-        </div>
-
-        <div className="flex w-full flex-col gap-3">
-          <a
-            href={urlCalendarioAgendamento(agendamentoConfirmado.id)}
-            className="flex w-full items-center justify-center gap-2 rounded-full bg-brand py-4 text-lg font-bold text-white transition-opacity hover:opacity-90"
-          >
-            <CalendarPlus size={20} />
-            Adicionar ao calendário
-          </a>
-          <a
-            href={gerarLinkGoogleAgenda(agendamentoConfirmado)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex w-full items-center justify-center gap-2 rounded-full border border-input-border py-4 text-lg font-bold text-ink transition-colors hover:bg-input"
-          >
-            <Calendar size={20} />
-            Adicionar ao Google Agenda
-          </a>
-        </div>
-
-        <p className="text-xs text-ink-muted">
-          No celular, o primeiro botão abre a agenda do aparelho já com o compromisso e um lembrete
-          1 hora antes; no computador, ele baixa um arquivo .ics.
-        </p>
-
-        <div className="flex flex-col items-center gap-2">
-          <button
-            type="button"
-            onClick={agendarOutraSessao}
-            className="text-sm font-semibold text-brand hover:underline"
-          >
-            Agendar outra sessão
-          </button>
-          <button
-            type="button"
-            onClick={() => router.push("/cliente/meus-agendamentos")}
-            className="text-sm font-semibold text-brand hover:underline"
-          >
-            Ir para Meus Agendamentos
-          </button>
-        </div>
-      </div>
     );
   }
 
