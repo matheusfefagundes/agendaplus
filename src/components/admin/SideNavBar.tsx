@@ -3,8 +3,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { LogOut, Menu, X } from "lucide-react";
+import { useTravarScroll } from "@/hooks/useTravarScroll";
 import { ITENS_NAVEGACAO_ADMIN as ITENS_NAVEGACAO } from "@/utils/navegacao";
 
 export function SideNavBar() {
@@ -12,13 +13,7 @@ export function SideNavBar() {
   const router = useRouter();
   const [menuAberto, setMenuAberto] = useState(false);
 
-  useEffect(() => {
-    if (!menuAberto) return;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [menuAberto]);
+  useTravarScroll(menuAberto);
 
   async function sair() {
     await fetch("/api/auth/logout", { method: "POST" });

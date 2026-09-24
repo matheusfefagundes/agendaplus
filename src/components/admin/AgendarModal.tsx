@@ -89,8 +89,33 @@ export function AgendarModal({
   }
 
   return (
-    <Modal open={open} onClose={fechar} title={`Agendar para ${clienteNome}`} size="lg">
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <Modal
+      open={open}
+      onClose={fechar}
+      title={`Agendar para ${clienteNome}`}
+      size="lg"
+      footer={
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={fechar}
+            className="min-w-0 flex-1 rounded-full border border-input-border py-2 text-sm font-semibold text-ink hover:bg-cream-dark"
+          >
+            Cancelar
+          </button>
+          <Button
+            type="submit"
+            form="form-agendar"
+            size="sm"
+            disabled={!servicoId || !data || !horario || salvando}
+            className="min-w-0 flex-1"
+          >
+            {salvando ? "Agendando..." : "Confirmar agendamento"}
+          </Button>
+        </div>
+      }
+    >
+      <form id="form-agendar" onSubmit={handleSubmit} className="flex flex-col gap-4 py-2">
         <Select
           id="servicoId"
           label="Serviço"
@@ -153,15 +178,6 @@ export function AgendarModal({
         </div>
 
         <Textarea id="observacoes" name="observacoes" label="Observações (opcional)" rows={3} />
-
-        <Button
-          type="submit"
-          size="sm"
-          disabled={!servicoId || !data || !horario || salvando}
-          className="mt-1 sm:w-auto"
-        >
-          {salvando ? "Agendando..." : "Confirmar agendamento"}
-        </Button>
       </form>
     </Modal>
   );

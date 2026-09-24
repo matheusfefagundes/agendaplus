@@ -58,13 +58,39 @@ export function AtribuirPacoteModal({
   }
 
   return (
-    <Modal open={open} onClose={fechar} title={`Atribuir pacote a ${clienteNome}`}>
+    <Modal
+      open={open}
+      onClose={fechar}
+      title={`Atribuir pacote a ${clienteNome}`}
+      footer={
+        pacotes.length > 0 ? (
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={fechar}
+              className="min-w-0 flex-1 rounded-full border border-input-border py-2 text-sm font-semibold text-ink hover:bg-cream-dark"
+            >
+              Cancelar
+            </button>
+            <Button
+              type="submit"
+              form="form-atribuir-pacote"
+              size="sm"
+              disabled={!pacoteId || enviando}
+              className="min-w-0 flex-1"
+            >
+              {enviando ? "Atribuindo..." : "Atribuir pacote"}
+            </Button>
+          </div>
+        ) : undefined
+      }
+    >
       {pacotes.length === 0 ? (
         <p className="text-ink-muted">
           Não há pacotes ativos. Cadastre um em Pacotes antes de atribuir a um cliente.
         </p>
       ) : (
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form id="form-atribuir-pacote" onSubmit={handleSubmit} className="flex flex-col gap-4 py-2">
           <Select
             label="Pacote"
             placeholder="Selecione um pacote"
@@ -89,10 +115,6 @@ export function AtribuirPacoteModal({
           <p className="text-sm text-ink-muted">
             O pagamento é combinado fora do sistema. A validade começa a contar a partir de hoje.
           </p>
-
-          <Button type="submit" size="sm" disabled={!pacoteId || enviando} className="mt-1 sm:w-auto">
-            {enviando ? "Atribuindo..." : "Atribuir pacote"}
-          </Button>
         </form>
       )}
     </Modal>

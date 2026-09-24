@@ -234,8 +234,28 @@ export function PacotesManager({ pacotes, servicos }: PacotesManagerProps) {
         open={modalAberto}
         onClose={() => setModalAberto(false)}
         title={pacoteEditando ? "Editar pacote" : "Novo pacote"}
+        footer={
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => setModalAberto(false)}
+              className="min-w-0 flex-1 rounded-full border border-input-border py-2 text-sm font-semibold text-ink hover:bg-cream-dark"
+            >
+              Cancelar
+            </button>
+            <Button
+              type="submit"
+              form="form-pacote"
+              size="sm"
+              disabled={enviando || !servicoId}
+              className="min-w-0 flex-1"
+            >
+              {enviando ? "Salvando..." : "Salvar"}
+            </Button>
+          </div>
+        }
       >
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form id="form-pacote" onSubmit={handleSubmit} className="flex flex-col gap-4 py-2">
           <Select
             label="Serviço"
             placeholder="Selecione um serviço"
@@ -280,9 +300,6 @@ export function PacotesManager({ pacotes, servicos }: PacotesManagerProps) {
               Alterações valem só para novas atribuições; pacotes que já foram atribuídos a clientes não mudam.
             </p>
           )}
-          <Button type="submit" disabled={enviando || !servicoId} className="mt-2">
-            {enviando ? "Salvando..." : "Salvar"}
-          </Button>
         </form>
       </Modal>
 

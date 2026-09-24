@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
-import { ChevronDown, Clock } from "lucide-react";
+import { ChevronDown, Clock, Sparkles } from "lucide-react";
 import { formatarMoeda } from "@/utils/formatters";
+import { urlFotoServico } from "@/utils/servicoFoto";
 import type { Servico } from "@/types/servico";
 
 type SugestoesCarrosselProps = {
@@ -58,11 +59,21 @@ export function SugestoesCarrossel({ servicos }: SugestoesCarrosselProps) {
     >
       {servicos.map((servico) => {
         const expandido = expandidoId === servico.id;
+        const foto = urlFotoServico(servico);
         return (
           <div
             key={servico.id}
             className="flex w-72 shrink-0 flex-col gap-2 rounded-3xl border border-input-border bg-white p-6"
           >
+            <div className="-mx-6 -mt-6 mb-1 h-36 overflow-hidden rounded-t-3xl bg-cream-dark">
+              {foto ? (
+                <img src={foto} alt="" loading="lazy" className="h-full w-full object-cover" />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-ink-muted/50">
+                  <Sparkles size={32} />
+                </div>
+              )}
+            </div>
             <div className="flex items-center gap-2 text-sm text-ink-muted">
               <Clock size={14} />
               {servico.duracaoMinutos} min
