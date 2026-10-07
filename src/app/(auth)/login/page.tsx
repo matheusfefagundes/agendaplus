@@ -6,6 +6,7 @@ import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 import { Suspense, useEffect, useState, type FormEvent } from "react";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { AvisoSessaoExpirada } from "@/components/auth/AvisoSessaoExpirada";
+import { BotaoGoogle } from "@/components/auth/BotaoGoogle";
 import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/TextField";
 import { toast } from "@/lib/toast";
@@ -166,12 +167,7 @@ export default function LoginPage() {
         <div className="h-px flex-1 bg-cream-dark" />
       </div>
 
-      <a
-        href="/api/auth/google"
-        className="flex w-full items-center justify-center gap-2 rounded-full bg-input px-8 py-3.5 text-lg font-semibold text-brand shadow-[0px_12px_16px_rgba(26,28,25,0.06)] transition-opacity hover:opacity-90"
-      >
-        Entrar com Google
-      </a>
+      <BotaoGoogle />
     </AuthLayout>
   );
 }

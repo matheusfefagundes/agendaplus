@@ -1,14 +1,15 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { randomBytes } from "node:crypto";
 
 const NOME_COOKIE_STATE = "google_oauth_state";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const appUrl = process.env.APP_URL;
 
   if (!clientId || !appUrl) {
-    return NextResponse.json({ error: "Login com Google não configurado." }, { status: 500 });
+    console.error("Login com Google não configurado: defina GOOGLE_CLIENT_ID e APP_URL.");
+    return NextResponse.redirect(new URL("/login?erro=google", request.url));
   }
 
   const state = randomBytes(16).toString("hex");
