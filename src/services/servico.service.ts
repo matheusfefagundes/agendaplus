@@ -12,6 +12,8 @@ type ServicoRow = {
   duracao_minutos: number;
   valor: string;
   ativo: boolean;
+  tem_foto: boolean;
+  updated_at: Date;
 };
 
 function mapRow(row: ServicoRow): Servico {
@@ -22,10 +24,13 @@ function mapRow(row: ServicoRow): Servico {
     duracaoMinutos: row.duracao_minutos,
     valor: Number(row.valor),
     ativo: row.ativo,
+    temFoto: row.tem_foto,
+    atualizadoEm: row.updated_at.toISOString(),
   };
 }
 
-const COLUNAS = "id, nome, descricao, duracao_minutos, valor, ativo";
+const COLUNAS =
+  "id, nome, descricao, duracao_minutos, valor, ativo, (foto IS NOT NULL) AS tem_foto, updated_at";
 
 export async function listarServicos(): Promise<Servico[]> {
   const result = await pool.query<ServicoRow>(
@@ -114,4 +119,21 @@ export async function excluirServico(id: string): Promise<void> {
     }
     throw error;
   }
+}
+
+export async function obterFotoServico(id: string): Promise<Buffer | null> {
+  const result = await pool.query<{ foto: Buffer | null }>("SELECT foto FROM servicos WHERE id = $1", [
+    id,
+  ]);
+  return result.rows[0]?.foto ?? null;
+}
+
+export async function salvarFotoServico(id: string, bytes: Buffer): Promise<boolean> {
+  const result = await pool.query("UPDATE servicos SET foto = $1 WHERE id = $2", [bytes, id]);
+  return (result.rowCount ?? 0) > 0;
+}
+
+export async function removerFotoServico(id: string): Promise<boolean> {
+  const result = await pool.query("UPDATE servicos SET foto = NULL WHERE id = $1", [id]);
+  return (result.rowCount ?? 0) > 0;
 }

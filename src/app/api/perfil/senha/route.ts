@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true });
   } catch (error) {
     if (error instanceof PerfilError) {
-      return NextResponse.json({ error: error.message }, { status: 401 });
+      return NextResponse.json({ error: error.message }, { status: 400 });
     }
     console.error("Erro ao alterar senha:", error);
     return NextResponse.json({ error: "Não foi possível alterar a senha." }, { status: 500 });

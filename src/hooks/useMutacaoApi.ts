@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "@/lib/toast";
+import { ROTA_LOGIN_SESSAO_EXPIRADA } from "@/utils/sessao";
 
 type OpcoesMutacao<T> = {
   aoSucesso?: (data: T) => void;
@@ -21,6 +22,14 @@ export function useMutacaoApi() {
     setEnviando(true);
     try {
       const response = await chamada();
+
+      // 401 vindo da API significa que o token venceu com a aba aberta: leva ao
+      // login, onde o aviso de sessão expirada é exibido.
+      if (response.status === 401) {
+        window.location.assign(ROTA_LOGIN_SESSAO_EXPIRADA);
+        return false;
+      }
+
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {

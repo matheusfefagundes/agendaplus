@@ -5,4 +5,6 @@ export type Servico = {
   duracaoMinutos: number;
   valor: number;
   ativo: boolean;
+  temFoto: boolean;
+  atualizadoEm: string;
 };

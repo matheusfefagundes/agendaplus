@@ -9,6 +9,8 @@ import { DatePicker } from "@/components/ui/DatePicker";
 import { Select } from "@/components/ui/Select";
 import { useMutacaoApi } from "@/hooks/useMutacaoApi";
 import { hojeEmSaoPauloISO } from "@/utils/data";
+import { calcularSaldoPorServico, formatarDataPacote, rotuloSessoes } from "@/utils/pacote";
+import type { PacoteCliente } from "@/types/pacote";
 import type { Servico } from "@/types/servico";
 
 type AgendarModalProps = {
@@ -17,9 +19,17 @@ type AgendarModalProps = {
   clienteId: string;
   clienteNome: string;
   servicos: Servico[];
+  pacotesDoCliente: PacoteCliente[];
 };
 
-export function AgendarModal({ open, onClose, clienteId, clienteNome, servicos }: AgendarModalProps) {
+export function AgendarModal({
+  open,
+  onClose,
+  clienteId,
+  clienteNome,
+  servicos,
+  pacotesDoCliente,
+}: AgendarModalProps) {
   const router = useRouter();
   const [servicoId, setServicoId] = useState("");
   const [data, setData] = useState("");
@@ -27,6 +37,8 @@ export function AgendarModal({ open, onClose, clienteId, clienteNome, servicos }
   const [horariosDisponiveis, setHorariosDisponiveis] = useState<string[]>([]);
   const { enviando: buscando, executar: executarBusca } = useMutacaoApi();
   const { enviando: salvando, executar: executarCriar } = useMutacaoApi();
+
+  const saldoDoServico = calcularSaldoPorServico(pacotesDoCliente).find((s) => s.servicoId === servicoId);
 
   async function buscarHorarios(novoServicoId: string, novaData: string) {
     setHorario("");
@@ -77,8 +89,33 @@ export function AgendarModal({ open, onClose, clienteId, clienteNome, servicos }
   }
 
   return (
-    <Modal open={open} onClose={fechar} title={`Agendar para ${clienteNome}`} size="lg">
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <Modal
+      open={open}
+      onClose={fechar}
+      title={`Agendar para ${clienteNome}`}
+      size="lg"
+      footer={
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={fechar}
+            className="min-w-0 flex-1 rounded-full border border-input-border py-2 text-sm font-semibold text-ink hover:bg-cream-dark"
+          >
+            Cancelar
+          </button>
+          <Button
+            type="submit"
+            form="form-agendar"
+            size="sm"
+            disabled={!servicoId || !data || !horario || salvando}
+            className="min-w-0 flex-1"
+          >
+            {salvando ? "Agendando..." : "Confirmar agendamento"}
+          </Button>
+        </div>
+      }
+    >
+      <form id="form-agendar" onSubmit={handleSubmit} className="flex flex-col gap-4 py-2">
         <Select
           id="servicoId"
           label="Serviço"
@@ -93,6 +130,13 @@ export function AgendarModal({ open, onClose, clienteId, clienteNome, servicos }
             label: `${servico.nome} (${servico.duracaoMinutos} min)`,
           }))}
         />
+
+        {saldoDoServico && (
+          <p className="rounded-2xl bg-cream-dark px-4 py-3 text-sm text-ink">
+            Este cliente tem pacote deste serviço: {rotuloSessoes(saldoDoServico.sessoesRestantes)} restantes
+            (vence em {formatarDataPacote(saldoDoServico.expiraEm)}). Esta sessão será descontada do pacote.
+          </p>
+        )}
 
         <DatePicker
           id="data"
@@ -134,15 +178,6 @@ export function AgendarModal({ open, onClose, clienteId, clienteNome, servicos }
         </div>
 
         <Textarea id="observacoes" name="observacoes" label="Observações (opcional)" rows={3} />
-
-        <Button
-          type="submit"
-          size="sm"
-          disabled={!servicoId || !data || !horario || salvando}
-          className="mt-1 sm:w-auto"
-        >
-          {salvando ? "Agendando..." : "Confirmar agendamento"}
-        </Button>
       </form>
     </Modal>
   );

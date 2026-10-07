@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 import { Suspense, useEffect, useState, type FormEvent } from "react";
 import { AuthLayout } from "@/components/auth/AuthLayout";
+import { AvisoSessaoExpirada } from "@/components/auth/AvisoSessaoExpirada";
 import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/TextField";
 import { toast } from "@/lib/toast";
@@ -107,6 +108,7 @@ export default function LoginPage() {
         </div>
       }
     >
+      <AvisoSessaoExpirada />
       <Suspense fallback={null}>
         <ErroGoogle />
       </Suspense>
@@ -137,7 +139,7 @@ export default function LoginPage() {
           error={errors.password}
           onChange={() => limparErro("password")}
           labelAction={
-            <Link href="/esqueci-senha" className="text-sm font-bold text-brand hover:opacity-90">
+            <Link href="/esqueci-senha" className="ml-auto text-sm font-bold text-brand hover:opacity-90">
               Esqueci minha senha
             </Link>
           }

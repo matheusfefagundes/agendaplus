@@ -8,6 +8,10 @@ import { Tooltip } from "@/components/ui/Tooltip";
 import { useMutacaoApi } from "@/hooks/useMutacaoApi";
 import { formatarDataExtensa, hojeEmSaoPauloISO } from "@/utils/data";
 import { formatarMoeda } from "@/utils/formatters";
+import { urlCalendarioAgendamento } from "@/utils/calendario";
+import { formatarDataPacote, rotuloSessoes } from "@/utils/pacote";
+import type { AgendamentoDetalhe } from "@/types/agendamento";
+import type { SaldoServicoPacote } from "@/types/pacote";
 import type { Servico } from "@/types/servico";
 
 const DIAS_ABREV = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
@@ -18,6 +22,7 @@ const MESES = [
 
 type NovoAgendamentoFormProps = {
   servicos: Servico[];
+  saldos: SaldoServicoPacote[];
 };
 
 function paraPartes(iso: string): { ano: number; mes: number; dia: number } {
@@ -50,7 +55,7 @@ function agruparPorPeriodo(horarios: string[]) {
   return { manha, tarde, noite };
 }
 
-export function NovoAgendamentoForm({ servicos }: NovoAgendamentoFormProps) {
+export function NovoAgendamentoForm({ servicos, saldos }: NovoAgendamentoFormProps) {
   const router = useRouter();
   const hojeISO = hojeEmSaoPauloISO();
   const [servicoId, setServicoId] = useState(servicos[0]?.id ?? "");
@@ -63,6 +68,7 @@ export function NovoAgendamentoForm({ servicos }: NovoAgendamentoFormProps) {
   const { enviando: salvando, executar: executarCriar } = useMutacaoApi();
 
   const servico = servicos.find((s) => s.id === servicoId) ?? null;
+  const saldoDoServico = saldos.find((s) => s.servicoId === servicoId) ?? null;
 
   async function buscarHorarios(novoServicoId: string, novaData: string) {
     setHorario("");
@@ -102,6 +108,8 @@ export function NovoAgendamentoForm({ servicos }: NovoAgendamentoFormProps) {
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
+    if (!servico) return;
+
     await executarCriar(
       () =>
         fetch("/api/agendamentos", {
@@ -112,7 +120,11 @@ export function NovoAgendamentoForm({ servicos }: NovoAgendamentoFormProps) {
       {
         mensagemSucesso: "Agendamento confirmado!",
         mensagemErroPadrao: "Não foi possível confirmar o agendamento.",
-        aoSucesso: () => {
+        aoSucesso: (resposta) => {
+          const { agendamento } = resposta as { agendamento: AgendamentoDetalhe };
+          // Abre o calendário do aparelho já com o compromisso (o celular sempre
+          // pede um toque para confirmar) e segue para a lista de agendamentos.
+          window.location.assign(urlCalendarioAgendamento(agendamento.id));
           router.push("/cliente/meus-agendamentos");
           router.refresh();
         },
@@ -140,10 +152,15 @@ export function NovoAgendamentoForm({ servicos }: NovoAgendamentoFormProps) {
               setServicoId(novoServicoId);
               buscarHorarios(novoServicoId, data);
             }}
-            options={servicos.map((s) => ({
-              value: s.id,
-              label: `${s.nome} · ${s.duracaoMinutos} min · ${formatarMoeda(s.valor)}`,
-            }))}
+            options={servicos.map((s) => {
+              const saldo = saldos.find((item) => item.servicoId === s.id);
+              return {
+                value: s.id,
+                label: `${s.nome} · ${s.duracaoMinutos} min · ${
+                  saldo ? `Pacote (${saldo.sessoesRestantes})` : formatarMoeda(s.valor)
+                }`,
+              };
+            })}
             placeholder="Selecione um serviço"
           />
         </div>
@@ -296,9 +313,17 @@ export function NovoAgendamentoForm({ servicos }: NovoAgendamentoFormProps) {
                   <span>Duração</span>
                   <span>{servico.duracaoMinutos} min</span>
                 </div>
+                {saldoDoServico && (
+                  <p className="rounded-2xl bg-cream px-3 py-2 text-sm text-ink">
+                    Usando seu pacote: {rotuloSessoes(saldoDoServico.sessoesRestantes)} restantes (vence em{" "}
+                    {formatarDataPacote(saldoDoServico.expiraEm)}).
+                  </p>
+                )}
                 <div className="flex items-center justify-between pt-2">
                   <span className="text-lg font-bold text-ink">Total</span>
-                  <span className="text-lg font-bold text-brand">{formatarMoeda(servico.valor)}</span>
+                  <span className="text-lg font-bold text-brand">
+                    {saldoDoServico ? "1 sessão do pacote" : formatarMoeda(servico.valor)}
+                  </span>
                 </div>
               </div>
             </div>

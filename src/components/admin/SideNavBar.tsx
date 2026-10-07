@@ -4,29 +4,16 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
-import {
-  CalendarDays,
-  LayoutDashboard,
-  LogOut,
-  Menu,
-  Settings,
-  Sparkles,
-  Users,
-  X,
-} from "lucide-react";
-
-const ITENS_NAVEGACAO = [
-  { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/agenda", label: "Agenda", icon: CalendarDays },
-  { href: "/admin/servicos", label: "Serviços", icon: Sparkles },
-  { href: "/admin/clientes", label: "Clientes", icon: Users },
-  { href: "/admin/configuracoes", label: "Configurações", icon: Settings },
-];
+import { LogOut, Menu, X } from "lucide-react";
+import { useTravarScroll } from "@/hooks/useTravarScroll";
+import { ITENS_NAVEGACAO_ADMIN as ITENS_NAVEGACAO } from "@/utils/navegacao";
 
 export function SideNavBar() {
   const pathname = usePathname();
   const router = useRouter();
   const [menuAberto, setMenuAberto] = useState(false);
+
+  useTravarScroll(menuAberto);
 
   async function sair() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -39,7 +26,7 @@ export function SideNavBar() {
       <div className="flex flex-col gap-8">
         <div className="flex items-center gap-3 px-2">
           <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-cream drop-shadow-[0px_1px_1px_rgba(0,0,0,0.05)]">
-            <Image src="/icons/logo-leaf.svg" alt="" width={17} height={17} />
+            <Image src="/images/logo/logo-lotus.png" alt="" width={26} height={26} />
           </div>
           <span className="text-xl font-extrabold tracking-tight text-brand">Agenda+</span>
         </div>
@@ -81,7 +68,7 @@ export function SideNavBar() {
       <header className="flex items-center justify-between border-b border-input-border bg-cream-dark px-4 py-3 lg:hidden">
         <div className="flex items-center gap-2">
           <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-cream">
-            <Image src="/icons/logo-leaf.svg" alt="" width={15} height={15} />
+            <Image src="/images/logo/logo-lotus.png" alt="" width={22} height={22} />
           </div>
           <span className="text-lg font-extrabold tracking-tight text-brand">Agenda+</span>
         </div>

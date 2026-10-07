@@ -182,14 +182,14 @@ export function HorariosEditor({ horarios }: HorariosEditorProps) {
             name="horaInicio"
             required
             aria-label="Horário de início"
-            className="w-full rounded-3xl border border-input-border bg-input px-4 py-3 text-ink"
+            className="min-h-[50px] w-full min-w-0 max-w-full appearance-none rounded-3xl border border-input-border bg-input px-4 py-3 text-left text-ink focus:outline-2 focus:outline-brand [&::-webkit-date-and-time-value]:text-left"
           />
           <input
             type="time"
             name="horaFim"
             required
             aria-label="Horário de fim"
-            className="w-full rounded-3xl border border-input-border bg-input px-4 py-3 text-ink"
+            className="min-h-[50px] w-full min-w-0 max-w-full appearance-none rounded-3xl border border-input-border bg-input px-4 py-3 text-left text-ink focus:outline-2 focus:outline-brand [&::-webkit-date-and-time-value]:text-left"
           />
         </div>
         <input
@@ -197,7 +197,7 @@ export function HorariosEditor({ horarios }: HorariosEditorProps) {
           name="intervaloMinutos"
           min={0}
           placeholder="Intervalo entre sessões (min)"
-          className="w-full rounded-3xl border border-input-border bg-input px-4 py-3 text-ink placeholder:text-ink-muted"
+          className="w-full rounded-3xl border border-input-border bg-input px-4 py-3 text-ink placeholder:text-ink-muted focus:outline-2 focus:outline-brand"
         />
         <Button type="submit" size="sm" disabled={!diaSemana || enviando} className="sm:w-auto">
           <Plus size={18} />
@@ -209,9 +209,29 @@ export function HorariosEditor({ horarios }: HorariosEditorProps) {
         open={horarioEditando !== null}
         onClose={() => setHorarioEditando(null)}
         title={horarioEditando ? `Editar ${DIAS_SEMANA[horarioEditando.diaSemana]}` : "Editar horário"}
+        footer={
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => setHorarioEditando(null)}
+              className="min-w-0 flex-1 rounded-full border border-input-border py-2 text-sm font-semibold text-ink hover:bg-cream-dark"
+            >
+              Cancelar
+            </button>
+            <Button
+              type="submit"
+              form="form-editar-horario"
+              size="sm"
+              disabled={salvandoEdicao}
+              className="min-w-0 flex-1"
+            >
+              {salvandoEdicao ? "Salvando..." : "Salvar"}
+            </Button>
+          </div>
+        }
       >
         {horarioEditando && (
-          <form onSubmit={handleEditarSubmit} className="flex flex-col gap-3">
+          <form id="form-editar-horario" onSubmit={handleEditarSubmit} className="flex flex-col gap-3 py-2">
             <div className="grid grid-cols-2 gap-3">
               <input
                 type="time"
@@ -219,7 +239,7 @@ export function HorariosEditor({ horarios }: HorariosEditorProps) {
                 required
                 defaultValue={formatarHoraCurta(horarioEditando.horaInicio)}
                 aria-label="Horário de início"
-                className="w-full rounded-3xl border border-input-border bg-input px-4 py-3 text-ink"
+                className="min-h-[50px] w-full min-w-0 max-w-full appearance-none rounded-3xl border border-input-border bg-input px-4 py-3 text-left text-ink focus:outline-2 focus:outline-brand [&::-webkit-date-and-time-value]:text-left"
               />
               <input
                 type="time"
@@ -227,7 +247,7 @@ export function HorariosEditor({ horarios }: HorariosEditorProps) {
                 required
                 defaultValue={formatarHoraCurta(horarioEditando.horaFim)}
                 aria-label="Horário de fim"
-                className="w-full rounded-3xl border border-input-border bg-input px-4 py-3 text-ink"
+                className="min-h-[50px] w-full min-w-0 max-w-full appearance-none rounded-3xl border border-input-border bg-input px-4 py-3 text-left text-ink focus:outline-2 focus:outline-brand [&::-webkit-date-and-time-value]:text-left"
               />
             </div>
             <input
@@ -236,11 +256,8 @@ export function HorariosEditor({ horarios }: HorariosEditorProps) {
               min={0}
               defaultValue={horarioEditando.intervaloMinutos}
               placeholder="Intervalo entre sessões (min)"
-              className="w-full rounded-3xl border border-input-border bg-input px-4 py-3 text-ink placeholder:text-ink-muted"
+              className="w-full rounded-3xl border border-input-border bg-input px-4 py-3 text-ink placeholder:text-ink-muted focus:outline-2 focus:outline-brand"
             />
-            <Button type="submit" size="sm" disabled={salvandoEdicao} className="mt-1 sm:w-auto">
-              {salvandoEdicao ? "Salvando..." : "Salvar"}
-            </Button>
           </form>
         )}
       </Modal>

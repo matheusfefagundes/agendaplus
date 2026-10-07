@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { obterSessao } from "@/lib/auth";
 import { obterClientePorUsuarioId } from "@/services/cliente.service";
 import { SideNavBar } from "@/components/cliente/SideNavBar";
+import { Breadcrumbs } from "@/components/cliente/Breadcrumbs";
 
 export default async function ClienteLayout({ children }: { children: ReactNode }) {
   const sessao = await obterSessao();
@@ -20,7 +21,10 @@ export default async function ClienteLayout({ children }: { children: ReactNode 
   return (
     <div className="flex min-h-screen w-full flex-col bg-cream lg:h-screen lg:flex-row lg:overflow-hidden">
       <SideNavBar nomeCliente={cliente.nome} />
-      <main className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-10 lg:py-8">{children}</main>
+      <main className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-10 lg:py-8">
+        <Breadcrumbs />
+        {children}
+      </main>
     </div>
   );
 }

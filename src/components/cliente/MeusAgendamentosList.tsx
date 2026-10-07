@@ -2,8 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { CalendarPlus } from "lucide-react";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { Tooltip } from "@/components/ui/Tooltip";
 import { useMutacaoApi } from "@/hooks/useMutacaoApi";
+import { urlCalendarioAgendamento } from "@/utils/calendario";
 import { rotuloAgrupamentoData } from "@/utils/data";
 import { ESTILO_BADGE_STATUS, STATUS_LABEL } from "@/utils/statusAgendamento";
 import type { AgendamentoDetalhe } from "@/types/agendamento";
@@ -76,14 +79,39 @@ export function MeusAgendamentosList({ agendamentos }: MeusAgendamentosListProps
                   className={`absolute inset-y-0 left-0 w-2 ${estilo.bg}`}
                   aria-hidden="true"
                 />
-                <div className="pl-2">
+                <div className="pl-2 pr-12 sm:pr-0">
                   <h4 className="text-lg font-bold text-ink">{agendamento.servicoNome}</h4>
-                  <span className={`mt-1 inline-block rounded-full px-3 py-1 text-xs font-semibold ${estilo.bg} ${estilo.text}`}>
-                    {STATUS_LABEL[agendamento.status]}
-                  </span>
+                  <div className="mt-1 flex flex-wrap items-center gap-2">
+                    <span className={`inline-block rounded-full px-3 py-1 text-xs font-semibold ${estilo.bg} ${estilo.text}`}>
+                      {STATUS_LABEL[agendamento.status]}
+                    </span>
+                    {agendamento.pacoteClienteId && (
+                      <span className="inline-block rounded-full bg-input px-3 py-1 text-xs font-semibold text-brand">
+                        Pacote
+                      </span>
+                    )}
+                  </div>
+                  <a
+                    href={urlCalendarioAgendamento(agendamento.id)}
+                    className="mt-3 hidden items-center gap-1.5 text-sm font-semibold text-brand hover:underline sm:inline-flex"
+                  >
+                    <CalendarPlus size={16} />
+                    Adicionar ao calendário
+                  </a>
                 </div>
-                <div className="flex items-center gap-4 pl-2 sm:pl-0">
-                  <div className="text-right">
+                <div className="absolute right-3 top-3 sm:hidden">
+                  <Tooltip content="Adicionar ao calendário" side="bottom" align="end">
+                    <a
+                      href={urlCalendarioAgendamento(agendamento.id)}
+                      aria-label="Adicionar ao calendário"
+                      className="flex size-10 items-center justify-center rounded-full text-brand transition-colors hover:bg-cream-dark"
+                    >
+                      <CalendarPlus size={20} />
+                    </a>
+                  </Tooltip>
+                </div>
+                <div className="flex items-center justify-between gap-4 pl-2 sm:justify-start sm:pl-0">
+                  <div className="text-left sm:text-right">
                     <p className="font-semibold text-ink">
                       {formatarFaixaHorario(agendamento.dataHoraInicio, agendamento.dataHoraFim)}
                     </p>
@@ -108,7 +136,9 @@ export function MeusAgendamentosList({ agendamentos }: MeusAgendamentosListProps
         title="Cancelar agendamento"
         message={
           paraCancelar
-            ? `Tem certeza que deseja cancelar "${paraCancelar.servicoNome}"? Essa ação não pode ser desfeita.`
+            ? `Tem certeza que deseja cancelar "${paraCancelar.servicoNome}"? Essa ação não pode ser desfeita.${
+                paraCancelar.pacoteClienteId ? " A sessão volta para o seu pacote." : ""
+              }`
             : ""
         }
         confirmLabel="Cancelar agendamento"

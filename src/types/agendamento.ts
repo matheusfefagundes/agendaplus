@@ -11,4 +11,5 @@ export type AgendamentoDetalhe = {
   dataHoraFim: string;
   status: StatusAgendamento;
   observacoes: string | null;
+  pacoteClienteId: string | null;
 };

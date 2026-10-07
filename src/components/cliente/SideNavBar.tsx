@@ -4,14 +4,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
-import { CalendarDays, CalendarPlus, History, Home, LogOut, Menu, X } from "lucide-react";
-
-const ITENS_NAVEGACAO = [
-  { href: "/cliente", label: "Início", icon: Home },
-  { href: "/cliente/meus-agendamentos", label: "Meus Agendamentos", icon: CalendarDays },
-  { href: "/cliente/novo-agendamento", label: "Novo Agendamento", icon: CalendarPlus },
-  { href: "/cliente/historico", label: "Histórico", icon: History },
-];
+import { LogOut, Menu, X } from "lucide-react";
+import { useTravarScroll } from "@/hooks/useTravarScroll";
+import { ITENS_NAVEGACAO_CLIENTE as ITENS_NAVEGACAO } from "@/utils/navegacao";
 
 type SideNavBarProps = {
   nomeCliente: string;
@@ -21,6 +16,8 @@ export function SideNavBar({ nomeCliente }: SideNavBarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [menuAberto, setMenuAberto] = useState(false);
+
+  useTravarScroll(menuAberto);
 
   async function sair() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -33,7 +30,7 @@ export function SideNavBar({ nomeCliente }: SideNavBarProps) {
       <div className="flex flex-col gap-8">
         <div className="flex items-center gap-3 px-2">
           <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-cream drop-shadow-[0px_1px_1px_rgba(0,0,0,0.05)]">
-            <Image src="/icons/logo-leaf.svg" alt="" width={17} height={17} />
+            <Image src="/images/logo/logo-lotus.png" alt="" width={26} height={26} />
           </div>
           <span className="text-xl font-extrabold tracking-tight text-brand">Agenda+</span>
         </div>
@@ -59,7 +56,13 @@ export function SideNavBar({ nomeCliente }: SideNavBarProps) {
       </div>
 
       <div className="flex flex-col gap-1">
-        <div className="flex items-center gap-3 rounded-2xl px-4 py-3">
+        <Link
+          href="/cliente/configuracoes"
+          onClick={() => setMenuAberto(false)}
+          className={`flex items-center gap-3 rounded-2xl px-4 py-3 transition-colors ${
+            pathname === "/cliente/configuracoes" ? "bg-brand/10" : "hover:bg-cream"
+          }`}
+        >
           <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand text-sm font-semibold text-white">
             {nomeCliente.charAt(0).toUpperCase()}
           </div>
@@ -67,7 +70,7 @@ export function SideNavBar({ nomeCliente }: SideNavBarProps) {
             <p className="truncate text-sm font-semibold text-ink">{nomeCliente}</p>
             <p className="text-xs text-ink-muted">Cliente</p>
           </div>
-        </div>
+        </Link>
         <button
           type="button"
           onClick={sair}
@@ -86,7 +89,7 @@ export function SideNavBar({ nomeCliente }: SideNavBarProps) {
       <header className="flex items-center justify-between border-b border-input-border bg-cream-dark px-4 py-3 lg:hidden">
         <div className="flex items-center gap-2">
           <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-cream">
-            <Image src="/icons/logo-leaf.svg" alt="" width={15} height={15} />
+            <Image src="/images/logo/logo-lotus.png" alt="" width={22} height={22} />
           </div>
           <span className="text-lg font-extrabold tracking-tight text-brand">Agenda+</span>
         </div>

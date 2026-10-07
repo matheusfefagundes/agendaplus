@@ -47,7 +47,7 @@ export function Popover({ trigger, children, align = "left", className = "", pan
       {trigger(render)}
       {aberto && (
         <div
-          className={`absolute top-full z-50 mt-2 rounded-3xl border border-input-border bg-cream shadow-lg ${
+          className={`absolute top-full z-50 mt-2 max-h-[70dvh] overflow-y-auto overscroll-contain rounded-3xl border border-input-border bg-cream shadow-lg ${
             align === "right" ? "right-0" : "left-0"
           } ${panelClassName}`}
         >
