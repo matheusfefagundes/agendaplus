@@ -3,12 +3,16 @@ import { gerarHashSenha, verificarSenha } from "@/lib/auth";
 
 export class PerfilError extends Error {}
 
-export async function obterPerfil(usuarioId: string): Promise<{ nome: string; email: string } | null> {
-  const result = await pool.query<{ nome: string; email: string }>(
-    "SELECT nome, email FROM usuarios WHERE id = $1",
+// temSenha é false para contas criadas pelo login com Google.
+export async function obterPerfil(
+  usuarioId: string,
+): Promise<{ nome: string; email: string; temSenha: boolean } | null> {
+  const result = await pool.query<{ nome: string; email: string; tem_senha: boolean }>(
+    "SELECT nome, email, senha_hash IS NOT NULL AS tem_senha FROM usuarios WHERE id = $1",
     [usuarioId],
   );
-  return result.rows[0] ?? null;
+  const row = result.rows[0];
+  return row ? { nome: row.nome, email: row.email, temSenha: row.tem_senha } : null;
 }
 
 export async function atualizarPerfil(
@@ -30,18 +34,25 @@ export async function atualizarPerfil(
   ]);
 }
 
+// Contas criadas pelo Google não têm senha: a primeira é criada sem pedir a
+// senha atual. Nas demais, a senha atual é obrigatória.
 export async function alterarSenha(
   usuarioId: string,
-  senhaAtual: string,
+  senhaAtual: string | undefined,
   novaSenha: string,
 ): Promise<void> {
-  const result = await pool.query<{ senha_hash: string }>(
+  const result = await pool.query<{ senha_hash: string | null }>(
     "SELECT senha_hash FROM usuarios WHERE id = $1",
     [usuarioId],
   );
   const usuario = result.rows[0];
-  if (!usuario || !(await verificarSenha(senhaAtual, usuario.senha_hash))) {
-    throw new PerfilError("Senha atual incorreta.");
+  if (!usuario) throw new PerfilError("Usuário não encontrado.");
+
+  if (usuario.senha_hash !== null) {
+    if (!senhaAtual) throw new PerfilError("Informe sua senha atual.");
+    if (!(await verificarSenha(senhaAtual, usuario.senha_hash))) {
+      throw new PerfilError("Senha atual incorreta.");
+    }
   }
 
   const novoHash = await gerarHashSenha(novaSenha);

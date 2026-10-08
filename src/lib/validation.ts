@@ -130,7 +130,9 @@ export const clientePerfilSchema = z
 
 export const senhaSchema = z
   .object({
-    senhaAtual: z.string().min(1, "Informe sua senha atual."),
+    // Opcional: contas criadas pelo Google ainda não têm senha (o serviço exige
+    // a senha atual quando ela existe).
+    senhaAtual: z.string().max(72).optional(),
     novaSenha: z.string().min(8, "A nova senha precisa ter pelo menos 8 caracteres.").max(72),
   })
   .strict();

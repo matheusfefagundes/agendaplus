@@ -13,6 +13,7 @@ type PerfilFormProps = {
   nome: string;
   email: string;
   telefone: string;
+  temSenha: boolean;
 };
 
 type CampoPerfil = "nome" | "email" | "telefone";
@@ -20,7 +21,7 @@ type CampoSenha = "senhaAtual" | "novaSenha" | "confirmarSenha";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export function PerfilForm({ nome, email, telefone }: PerfilFormProps) {
+export function PerfilForm({ nome, email, telefone, temSenha }: PerfilFormProps) {
   const router = useRouter();
   const [telefoneValor, setTelefoneValor] = useState(telefone ? mascararTelefone(telefone) : "");
   const [perfilErrors, setPerfilErrors] = useState<Partial<Record<CampoPerfil, boolean>>>({});
@@ -98,7 +99,7 @@ export function PerfilForm({ nome, email, telefone }: PerfilFormProps) {
     const confirmarSenha = String(formData.get("confirmarSenha") ?? "");
 
     const nextErrors: Partial<Record<CampoSenha, boolean>> = {};
-    if (senhaAtual.trim() === "") nextErrors.senhaAtual = true;
+    if (temSenha && senhaAtual.trim() === "") nextErrors.senhaAtual = true;
 
     const eSenhaCurta = novaSenha.length < 8;
     if (eSenhaCurta) nextErrors.novaSenha = true;
@@ -126,13 +127,14 @@ export function PerfilForm({ nome, email, telefone }: PerfilFormProps) {
         fetch("/api/cliente/perfil/senha", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ senhaAtual, novaSenha }),
+          body: JSON.stringify({ senhaAtual: temSenha ? senhaAtual : undefined, novaSenha }),
         }),
       {
-        mensagemSucesso: "Senha alterada com sucesso.",
+        mensagemSucesso: temSenha ? "Senha alterada com sucesso." : "Senha criada com sucesso.",
         mensagemErroPadrao: "Não foi possível alterar a senha.",
         aoSucesso: () => {
           form.reset();
+          router.refresh();
           setSenhaCurta(false);
           setSenhaMismatch(false);
         },
@@ -195,27 +197,33 @@ export function PerfilForm({ nome, email, telefone }: PerfilFormProps) {
         noValidate
         className="flex flex-col gap-4 rounded-3xl bg-cream-dark p-6"
       >
-        <h2 className="text-lg font-bold text-ink">Alterar senha</h2>
-        <TextField
-          id="senhaAtual"
-          name="senhaAtual"
-          type={mostrarSenhaAtual ? "text" : "password"}
-          label="Senha atual"
-          required
-          error={senhaErrors.senhaAtual}
-          errorMessage={senhaErrors.senhaAtual ? "Informe sua senha atual." : undefined}
-          onChange={() => limparErroSenha("senhaAtual")}
-          rightSlot={
-            <button
-              type="button"
-              onClick={() => setMostrarSenhaAtual((prev) => !prev)}
-              aria-label={mostrarSenhaAtual ? "Ocultar senha" : "Mostrar senha"}
-              className="flex items-center justify-center text-ink-muted"
-            >
-              {mostrarSenhaAtual ? <EyeOff size={20} /> : <Eye size={20} />}
-            </button>
-          }
-        />
+        <h2 className="text-lg font-bold text-ink">{temSenha ? "Alterar senha" : "Criar senha"}</h2>
+        {temSenha ? (
+          <TextField
+            id="senhaAtual"
+            name="senhaAtual"
+            type={mostrarSenhaAtual ? "text" : "password"}
+            label="Senha atual"
+            required
+            error={senhaErrors.senhaAtual}
+            errorMessage={senhaErrors.senhaAtual ? "Informe sua senha atual." : undefined}
+            onChange={() => limparErroSenha("senhaAtual")}
+            rightSlot={
+              <button
+                type="button"
+                onClick={() => setMostrarSenhaAtual((prev) => !prev)}
+                aria-label={mostrarSenhaAtual ? "Ocultar senha" : "Mostrar senha"}
+                className="flex items-center justify-center text-ink-muted"
+              >
+                {mostrarSenhaAtual ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            }
+          />
+        ) : (
+          <p className="text-sm text-ink-muted">
+            Você entra com o Google. Crie uma senha se quiser entrar também com e-mail e senha.
+          </p>
+        )}
         <TextField
           id="novaSenha"
           name="novaSenha"
@@ -267,7 +275,7 @@ export function PerfilForm({ nome, email, telefone }: PerfilFormProps) {
           }
         />
         <Button type="submit" size="sm" disabled={enviandoSenha} className="mt-2 sm:w-auto">
-          {enviandoSenha ? "Salvando..." : "Alterar senha"}
+          {enviandoSenha ? "Salvando..." : temSenha ? "Alterar senha" : "Criar senha"}
         </Button>
       </form>
     </div>

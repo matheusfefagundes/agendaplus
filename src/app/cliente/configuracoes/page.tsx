@@ -19,6 +19,7 @@ export default async function ClienteConfiguracoesPage() {
         nome={perfil?.nome ?? ""}
         email={perfil?.email ?? ""}
         telefone={cliente?.telefone ?? ""}
+        temSenha={perfil?.temSenha ?? true}
       />
     </div>
   );
