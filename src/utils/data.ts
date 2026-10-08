@@ -104,3 +104,51 @@ export function formatarDiaSemanaEData(dataISO: string): string {
   const diaSemanaCapitalizado = diaSemana.charAt(0).toUpperCase() + diaSemana.slice(1);
   return `${diaSemanaCapitalizado}, ${formatarDiaEMes(dataISO)}`;
 }
+export const MESES = [
+  "janeiro", "fevereiro", "março", "abril", "maio", "junho",
+  "julho", "agosto", "setembro", "outubro", "novembro", "dezembro",
+];
+
+// Mês no formato YYYY-MM.
+export function mesDaData(dataISO: string): string {
+  return dataISO.slice(0, 7);
+}
+
+export function adicionarMeses(mes: string, quantidade: number): string {
+  const [ano, numeroMes] = mes.split("-").map(Number);
+  const data = new Date(Date.UTC(ano, numeroMes - 1 + quantidade, 1));
+  return data.toISOString().slice(0, 7);
+}
+
+// "Outubro de 2026"
+export function formatarMesAno(mes: string): string {
+  const [ano, numeroMes] = mes.split("-").map(Number);
+  const nome = MESES[numeroMes - 1];
+  return `${nome.charAt(0).toUpperCase()}${nome.slice(1)} de ${ano}`;
+}
+
+// "OUT"
+export function abreviarMes(dataISO: string): string {
+  const numeroMes = Number(dataISO.split("-")[1]);
+  return MESES[numeroMes - 1].slice(0, 3).toUpperCase();
+}
+
+// Dias exibidos no calendário mensal: semanas completas (domingo a sábado)
+// que cobrem o mês inteiro.
+export function diasDaGradeDoMes(mes: string): string[] {
+  const primeiroDia = `${mes}-01`;
+  const ultimoDia = adicionarDias(`${adicionarMeses(mes, 1)}-01`, -1);
+  const inicio = domingoDaSemana(primeiroDia);
+  const fim = adicionarDias(domingoDaSemana(ultimoDia), 6);
+
+  const dias: string[] = [];
+  for (let dia = inicio; dia <= fim; dia = adicionarDias(dia, 1)) {
+    dias.push(dia);
+  }
+  return dias;
+}
+
+// "09:30" no fuso da clínica a partir de um timestamp ISO.
+export function formatarHoraBrasil(iso: string): string {
+  return formatarHoraDeMinutos(minutosDoDiaBrasil(iso));
+}

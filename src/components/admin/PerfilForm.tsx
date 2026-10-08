@@ -10,9 +10,10 @@ import { useMutacaoApi } from "@/hooks/useMutacaoApi";
 type PerfilFormProps = {
   nome: string;
   email: string;
+  temSenha: boolean;
 };
 
-export function PerfilForm({ nome, email }: PerfilFormProps) {
+export function PerfilForm({ nome, email, temSenha }: PerfilFormProps) {
   const router = useRouter();
   const { enviando: enviandoPerfil, executar: executarPerfil } = useMutacaoApi();
   const { enviando: enviandoSenha, executar: executarSenha } = useMutacaoApi();
@@ -57,14 +58,17 @@ export function PerfilForm({ nome, email }: PerfilFormProps) {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            senhaAtual: formData.get("senhaAtual"),
+            senhaAtual: temSenha ? formData.get("senhaAtual") : undefined,
             novaSenha,
           }),
         }),
       {
-        mensagemSucesso: "Senha alterada com sucesso.",
+        mensagemSucesso: temSenha ? "Senha alterada com sucesso." : "Senha criada com sucesso.",
         mensagemErroPadrao: "Não foi possível alterar a senha.",
-        aoSucesso: () => form.reset(),
+        aoSucesso: () => {
+          form.reset();
+          router.refresh();
+        },
       },
     );
   }
@@ -87,8 +91,14 @@ export function PerfilForm({ nome, email }: PerfilFormProps) {
         onSubmit={handleSenhaSubmit}
         className="flex flex-col gap-4 rounded-3xl bg-cream-dark p-6"
       >
-        <h2 className="text-lg font-bold text-ink">Alterar senha</h2>
-        <TextField id="senhaAtual" name="senhaAtual" type="password" label="Senha atual" required />
+        <h2 className="text-lg font-bold text-ink">{temSenha ? "Alterar senha" : "Criar senha"}</h2>
+        {temSenha ? (
+          <TextField id="senhaAtual" name="senhaAtual" type="password" label="Senha atual" required />
+        ) : (
+          <p className="text-sm text-ink-muted">
+            Você entra com o Google. Crie uma senha se quiser entrar também com e-mail e senha.
+          </p>
+        )}
         <TextField id="novaSenha" name="novaSenha" type="password" label="Nova senha" required />
         <TextField
           id="confirmarSenha"
@@ -98,7 +108,7 @@ export function PerfilForm({ nome, email }: PerfilFormProps) {
           required
         />
         <Button type="submit" size="sm" disabled={enviandoSenha} className="mt-2 sm:w-auto">
-          {enviandoSenha ? "Salvando..." : "Alterar senha"}
+          {enviandoSenha ? "Salvando..." : temSenha ? "Alterar senha" : "Criar senha"}
         </Button>
       </form>
     </div>

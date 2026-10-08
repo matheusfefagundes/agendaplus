@@ -115,13 +115,13 @@ export function HorariosEditor({ horarios }: HorariosEditorProps) {
   }
 
   return (
-    <div className="flex flex-col gap-4 rounded-3xl bg-cream-dark p-6">
-      <h2 className="text-lg font-bold text-ink">Horários de atendimento</h2>
+    <div className="flex flex-col gap-4 rounded-3xl bg-cream-dark p-6 lg:h-full lg:min-h-0">
+      <h2 className="shrink-0 text-lg font-bold text-ink">Horários de atendimento</h2>
 
       {horarios.length === 0 ? (
         <p className="text-sm text-ink-muted">Nenhuma janela de atendimento cadastrada ainda.</p>
       ) : (
-        <ul className="flex max-h-96 flex-col gap-2 overflow-y-auto pr-1">
+        <ul className="flex max-h-96 flex-col gap-2 overflow-y-auto pr-1 lg:max-h-none lg:min-h-0 lg:flex-1">
           {horarios.map((horario) => (
             <li
               key={horario.id}

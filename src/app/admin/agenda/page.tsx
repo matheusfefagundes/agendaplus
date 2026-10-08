@@ -1,24 +1,45 @@
 import { AgendaCalendario } from "@/components/admin/AgendaCalendario";
-import { listarAgendamentosPeriodo } from "@/services/agendamento.service";
-import { listarHorarios } from "@/services/horario.service";
-import { adicionarDias, domingoDaSemana, hojeEmSaoPauloISO, inicioDoDiaBrasil } from "@/utils/data";
+import {
+  listarAgendamentosPeriodo,
+  listarProximosAgendamentos,
+} from "@/services/agendamento.service";
+import {
+  adicionarDias,
+  diasDaGradeDoMes,
+  hojeEmSaoPauloISO,
+  inicioDoDiaBrasil,
+  mesDaData,
+} from "@/utils/data";
+
+const MES_REGEX = /^\d{4}-(0[1-9]|1[0-2])$/;
+const LIMITE_PROXIMOS = 5;
 
 type AdminAgendaPageProps = {
-  searchParams: Promise<{ inicio?: string }>;
+  searchParams: Promise<{ mes?: string }>;
 };
 
-export default async function AdminAgendaPage({ searchParams }: AdminAgendaPageProps) {
-  const { inicio } = await searchParams;
+export default async function AdminAgendaPage({
+  searchParams,
+}: AdminAgendaPageProps) {
+  const { mes: mesParam } = await searchParams;
   const hoje = hojeEmSaoPauloISO();
-  const domingo = domingoDaSemana(inicio ?? hoje);
-  const proximoDomingo = adicionarDias(domingo, 7);
+  const mes = mesParam && MES_REGEX.test(mesParam) ? mesParam : mesDaData(hoje);
+  const dias = diasDaGradeDoMes(mes);
 
-  const [agendamentos, horarios] = await Promise.all([
-    listarAgendamentosPeriodo(inicioDoDiaBrasil(domingo), inicioDoDiaBrasil(proximoDomingo)),
-    listarHorarios(),
+  const [agendamentos, proximos] = await Promise.all([
+    listarAgendamentosPeriodo(
+      inicioDoDiaBrasil(dias[0]),
+      inicioDoDiaBrasil(adicionarDias(dias[dias.length - 1], 1)),
+    ),
+    listarProximosAgendamentos(LIMITE_PROXIMOS),
   ]);
 
   return (
-    <AgendaCalendario domingo={domingo} hoje={hoje} agendamentos={agendamentos} horarios={horarios} />
+    <AgendaCalendario
+      mes={mes}
+      hoje={hoje}
+      agendamentos={agendamentos}
+      proximos={proximos}
+    />
   );
 }

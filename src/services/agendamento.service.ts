@@ -63,14 +63,25 @@ export async function concluirAgendamentosVencidos(): Promise<void> {
   );
 }
 
+// Agendamentos da agenda do admin — cancelados ficam de fora.
 export async function listarAgendamentosPeriodo(
   inicio: Date,
   fim: Date,
 ): Promise<AgendamentoDetalhe[]> {
   await concluirAgendamentosVencidos();
   const result = await pool.query<AgendamentoRow>(
-    `${SELECT_BASE} WHERE a.data_hora_inicio >= $1 AND a.data_hora_inicio < $2 ORDER BY a.data_hora_inicio ASC`,
+    `${SELECT_BASE} WHERE a.data_hora_inicio >= $1 AND a.data_hora_inicio < $2 AND a.status <> 'cancelado'
+     ORDER BY a.data_hora_inicio ASC`,
     [inicio, fim],
+  );
+  return result.rows.map(mapRow);
+}
+
+export async function listarProximosAgendamentos(limite: number): Promise<AgendamentoDetalhe[]> {
+  const result = await pool.query<AgendamentoRow>(
+    `${SELECT_BASE} WHERE a.status IN ('pendente', 'confirmado') AND a.data_hora_fim > now()
+     ORDER BY a.data_hora_inicio ASC LIMIT $1`,
+    [limite],
   );
   return result.rows.map(mapRow);
 }

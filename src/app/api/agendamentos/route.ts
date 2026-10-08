@@ -7,6 +7,7 @@ import {
   criarAgendamento,
   HorarioIndisponivelError,
 } from "@/services/agendamento.service";
+import { agendarSincronizacaoGoogle } from "@/services/google-agenda.service";
 
 const DATA_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -58,6 +59,7 @@ export async function POST(request: NextRequest) {
     }
 
     const agendamento = await criarAgendamento(dadosCriacao);
+    agendarSincronizacaoGoogle(agendamento.id);
     return NextResponse.json({ agendamento }, { status: 201 });
   } catch (error) {
     if (error instanceof HorarioIndisponivelError) {

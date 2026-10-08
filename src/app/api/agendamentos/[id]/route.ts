@@ -8,6 +8,7 @@ import {
   AgendamentoNaoEncontradoError,
   TransicaoInvalidaError,
 } from "@/services/agendamento.service";
+import { agendarSincronizacaoGoogle } from "@/services/google-agenda.service";
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const sessao = await obterSessao();
@@ -31,6 +32,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       if (!cliente) return NextResponse.json({ error: "Não autorizado." }, { status: 403 });
 
       const agendamento = await cancelarAgendamentoCliente(cliente.id, id);
+      agendarSincronizacaoGoogle(agendamento.id);
       return NextResponse.json({ agendamento });
     }
 
@@ -38,6 +40,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     if (!agendamento) {
       return NextResponse.json({ error: "Agendamento não encontrado." }, { status: 404 });
     }
+    agendarSincronizacaoGoogle(agendamento.id);
     return NextResponse.json({ agendamento });
   } catch (error) {
     if (error instanceof AgendamentoNaoEncontradoError) {
