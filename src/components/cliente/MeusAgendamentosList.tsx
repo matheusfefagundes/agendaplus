@@ -6,7 +6,7 @@ import { CalendarPlus } from "lucide-react";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { useMutacaoApi } from "@/hooks/useMutacaoApi";
-import { urlCalendarioAgendamento } from "@/utils/calendario";
+import { abrirNoCalendario, urlCalendarioAgendamento } from "@/utils/calendario";
 import { rotuloAgrupamentoData } from "@/utils/data";
 import { ESTILO_BADGE_STATUS, STATUS_LABEL } from "@/utils/statusAgendamento";
 import type { AgendamentoDetalhe } from "@/types/agendamento";
@@ -93,6 +93,10 @@ export function MeusAgendamentosList({ agendamentos }: MeusAgendamentosListProps
                   </div>
                   <a
                     href={urlCalendarioAgendamento(agendamento.id)}
+                    onClick={(event) => {
+                      event.preventDefault();
+                      abrirNoCalendario(agendamento);
+                    }}
                     className="mt-3 hidden items-center gap-1.5 text-sm font-semibold text-brand hover:underline sm:inline-flex"
                   >
                     <CalendarPlus size={16} />
@@ -103,6 +107,10 @@ export function MeusAgendamentosList({ agendamentos }: MeusAgendamentosListProps
                   <Tooltip content="Adicionar ao calendário" side="bottom" align="end">
                     <a
                       href={urlCalendarioAgendamento(agendamento.id)}
+                      onClick={(event) => {
+                        event.preventDefault();
+                        abrirNoCalendario(agendamento);
+                      }}
                       aria-label="Adicionar ao calendário"
                       className="flex size-10 items-center justify-center rounded-full text-brand transition-colors hover:bg-cream-dark"
                     >

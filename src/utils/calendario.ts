@@ -20,6 +20,19 @@ function formatarDataUTC(iso: string): string {
   return new Date(iso).toISOString().replace(/[-:]|\.\d{3}/g, "");
 }
 
+// Abre o Google Agenda com o evento já preenchido (o usuário só toca em Salvar).
+export function gerarLinkGoogleAgenda(evento: EventoCalendario): string {
+  const params = new URLSearchParams({
+    action: "TEMPLATE",
+    text: tituloEvento(evento),
+    dates: `${formatarDataUTC(evento.dataHoraInicio)}/${formatarDataUTC(evento.dataHoraFim)}`,
+    details: evento.observacoes || "Agendamento confirmado pelo Agenda+.",
+    location: NOME_LOCAL,
+  });
+
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
+}
+
 function escaparTexto(texto: string): string {
   return texto
     .replace(/\\/g, "\\\\")
@@ -91,4 +104,25 @@ export function nomeArquivoICS(evento: EventoCalendario): string {
 
 export function urlCalendarioAgendamento(agendamentoId: string): string {
   return `/api/agendamentos/${agendamentoId}/calendario`;
+}
+
+// iPhone/iPad abrem o .ics direto na agenda do aparelho; nos demais (Android,
+// computador) o navegador só baixaria o arquivo, então usamos o Google Agenda.
+function ehDispositivoApple(): boolean {
+  const { userAgent, maxTouchPoints } = window.navigator;
+  return /iPad|iPhone|iPod/.test(userAgent) || (/Macintosh/.test(userAgent) && maxTouchPoints > 1);
+}
+
+// Só no cliente. Retorna false quando o navegador bloqueou a nova aba.
+export function abrirNoCalendario(evento: EventoCalendario): boolean {
+  if (ehDispositivoApple()) {
+    window.location.assign(urlCalendarioAgendamento(evento.id));
+    return true;
+  }
+  // Sem "noopener" no window.open: com ele o retorno é sempre null e não daria
+  // para saber se a aba foi bloqueada. O opener é cortado logo em seguida.
+  const novaAba = window.open(gerarLinkGoogleAgenda(evento), "_blank");
+  if (!novaAba) return false;
+  novaAba.opener = null;
+  return true;
 }

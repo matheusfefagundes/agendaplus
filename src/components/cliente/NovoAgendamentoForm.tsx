@@ -8,7 +8,8 @@ import { Tooltip } from "@/components/ui/Tooltip";
 import { useMutacaoApi } from "@/hooks/useMutacaoApi";
 import { formatarDataExtensa, hojeEmSaoPauloISO } from "@/utils/data";
 import { formatarMoeda } from "@/utils/formatters";
-import { urlCalendarioAgendamento } from "@/utils/calendario";
+import { abrirNoCalendario } from "@/utils/calendario";
+import { toast } from "@/lib/toast";
 import { formatarDataPacote, rotuloSessoes } from "@/utils/pacote";
 import type { AgendamentoDetalhe } from "@/types/agendamento";
 import type { SaldoServicoPacote } from "@/types/pacote";
@@ -122,9 +123,11 @@ export function NovoAgendamentoForm({ servicos, saldos }: NovoAgendamentoFormPro
         mensagemErroPadrao: "Não foi possível confirmar o agendamento.",
         aoSucesso: (resposta) => {
           const { agendamento } = resposta as { agendamento: AgendamentoDetalhe };
-          // Abre o calendário do aparelho já com o compromisso (o celular sempre
-          // pede um toque para confirmar) e segue para a lista de agendamentos.
-          window.location.assign(urlCalendarioAgendamento(agendamento.id));
+          // Abre a agenda já com o compromisso (o aparelho pede um toque para
+          // salvar) e segue para a lista de agendamentos.
+          if (!abrirNoCalendario(agendamento)) {
+            toast.info("Toque em 'Adicionar ao calendário' para salvar o horário na sua agenda.");
+          }
           router.push("/cliente/meus-agendamentos");
           router.refresh();
         },
