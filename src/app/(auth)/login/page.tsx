@@ -106,6 +106,9 @@ export default function LoginPage() {
               Cadastre-se
             </Link>
           </p>
+          <Link href="/privacidade" className="text-xs text-ink-muted hover:underline">
+            Política de Privacidade
+          </Link>
         </div>
       }
     >
