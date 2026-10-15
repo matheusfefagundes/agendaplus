@@ -2,7 +2,8 @@ import { config } from "dotenv";
 import bcrypt from "bcryptjs";
 import { Pool, type PoolClient } from "pg";
 
-config({ path: ".env.local" });
+// .env.local tem prioridade; o projeto usa .env por padrão.
+config({ path: [".env.local", ".env"], quiet: true });
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const SENHA_DEMO = process.env.SEED_PASSWORD ?? "Agenda123!";
