@@ -5,6 +5,7 @@ import {
   formatarDataPacote,
   rotuloRestantes,
   SITUACAO_PACOTE_LABEL,
+  nomesServicos,
 } from "@/utils/pacote";
 import type { PacoteCliente } from "@/types/pacote";
 
@@ -38,7 +39,7 @@ export function MeusPacotesList({ pacotes }: MeusPacotesListProps) {
             className={`flex h-full flex-col gap-4 rounded-3xl bg-cream-dark p-6 ${inativo ? "opacity-70" : ""}`}
           >
             <div className="flex items-start justify-between gap-2">
-              <h3 className="min-w-0 font-bold text-ink">{pacote.servicoNome}</h3>
+              <h3 className="min-w-0 font-bold text-ink">{nomesServicos(pacote)}</h3>
               <span
                 className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${estilo.bg} ${estilo.text}`}
               >

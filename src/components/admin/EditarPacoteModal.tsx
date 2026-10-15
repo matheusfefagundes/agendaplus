@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { Tabs, type AbaTabs } from "@/components/ui/Tabs";
 import { TextField } from "@/components/ui/TextField";
 import { useMutacaoApi } from "@/hooks/useMutacaoApi";
-import { formatarDataPacote, rotuloSessoes } from "@/utils/pacote";
+import { formatarDataPacote, nomesServicos, rotuloSessoes } from "@/utils/pacote";
 import type { PacoteCliente } from "@/types/pacote";
 
 type EditarPacoteModalProps = {
@@ -133,7 +133,7 @@ function EditarPacoteForm({ pacote, onClose, onCancelarPacote }: EditarPacoteFor
   return (
     <div className="flex flex-col gap-5">
       <p className="text-sm text-ink-muted">
-        {pacote.servicoNome} · {rotuloSessoes(pacote.sessoesUsadas)} já usadas · vence em{" "}
+        {nomesServicos(pacote)} · {rotuloSessoes(pacote.sessoesUsadas)} já usadas · vence em{" "}
         {formatarDataPacote(pacote.expiraEm)}
       </p>
 

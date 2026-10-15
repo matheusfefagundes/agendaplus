@@ -8,9 +8,10 @@ import { TextField } from "@/components/ui/TextField";
 import { Modal } from "@/components/ui/Modal";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { Select } from "@/components/ui/Select";
+import { SelecaoMultipla } from "@/components/ui/SelecaoMultipla";
 import { useMutacaoApi } from "@/hooks/useMutacaoApi";
 import { formatarMoeda } from "@/utils/formatters";
-import { rotuloSessoes } from "@/utils/pacote";
+import { nomesServicos, rotuloSessoes } from "@/utils/pacote";
 import type { Pacote } from "@/types/pacote";
 import type { Servico } from "@/types/servico";
 
@@ -31,7 +32,7 @@ export function PacotesManager({ pacotes, servicos }: PacotesManagerProps) {
   const router = useRouter();
   const [modalAberto, setModalAberto] = useState(false);
   const [pacoteEditando, setPacoteEditando] = useState<Pacote | null>(null);
-  const [servicoId, setServicoId] = useState("");
+  const [servicoIds, setServicoIds] = useState<string[]>([]);
   const [pacoteParaExcluir, setPacoteParaExcluir] = useState<Pacote | null>(null);
   const [pacoteParaDesativar, setPacoteParaDesativar] = useState<Pacote | null>(null);
   const [filtroStatus, setFiltroStatus] = useState<FiltroStatus>("todos");
@@ -46,22 +47,24 @@ export function PacotesManager({ pacotes, servicos }: PacotesManagerProps) {
     return true;
   });
 
-  // Ao editar um pacote cujo serviço foi desativado, ele continua como opção
+  // Ao editar um pacote com algum serviço desativado, ele continua como opção
   // para o formulário não perder o valor atual.
   const opcoesServico = servicos.map((servico) => ({ value: servico.id, label: servico.nome }));
-  if (pacoteEditando && !opcoesServico.some((opcao) => opcao.value === pacoteEditando.servicoId)) {
-    opcoesServico.push({ value: pacoteEditando.servicoId, label: pacoteEditando.servicoNome });
+  for (const servico of pacoteEditando?.servicos ?? []) {
+    if (!opcoesServico.some((opcao) => opcao.value === servico.id)) {
+      opcoesServico.push({ value: servico.id, label: servico.nome });
+    }
   }
 
   function abrirNovo() {
     setPacoteEditando(null);
-    setServicoId("");
+    setServicoIds([]);
     setModalAberto(true);
   }
 
   function abrirEdicao(pacote: Pacote) {
     setPacoteEditando(pacote);
-    setServicoId(pacote.servicoId);
+    setServicoIds(pacote.servicos.map((servico) => servico.id));
     setModalAberto(true);
   }
 
@@ -70,7 +73,7 @@ export function PacotesManager({ pacotes, servicos }: PacotesManagerProps) {
     const formData = new FormData(event.currentTarget);
 
     const payload = {
-      servicoId,
+      servicoIds,
       quantidadeSessoes: Number(formData.get("quantidadeSessoes")),
       valor: Number(formData.get("valor")),
       validadeDias: Number(formData.get("validadeDias")),
@@ -186,7 +189,7 @@ export function PacotesManager({ pacotes, servicos }: PacotesManagerProps) {
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <h3 className="font-bold text-ink">{rotuloSessoes(pacote.quantidadeSessoes)}</h3>
-                  <p className="truncate text-sm text-ink-muted">{pacote.servicoNome}</p>
+                  <p className="text-sm break-words text-ink-muted">{nomesServicos(pacote)}</p>
                 </div>
                 <span
                   className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${
@@ -219,7 +222,7 @@ export function PacotesManager({ pacotes, servicos }: PacotesManagerProps) {
                 <button
                   type="button"
                   onClick={() => setPacoteParaExcluir(pacote)}
-                  aria-label={`Excluir pacote de ${rotuloSessoes(pacote.quantidadeSessoes)} de ${pacote.servicoNome}`}
+                  aria-label={`Excluir pacote de ${rotuloSessoes(pacote.quantidadeSessoes)} de ${nomesServicos(pacote)}`}
                   className="flex shrink-0 items-center justify-center rounded-full border border-input-border p-2 text-ink-muted hover:border-danger hover:text-danger"
                 >
                   <Trash2 size={16} />
@@ -247,7 +250,7 @@ export function PacotesManager({ pacotes, servicos }: PacotesManagerProps) {
               type="submit"
               form="form-pacote"
               size="sm"
-              disabled={enviando || !servicoId}
+              disabled={enviando || servicoIds.length === 0}
               className="min-w-0 flex-1"
             >
               {enviando ? "Salvando..." : "Salvar"}
@@ -256,11 +259,11 @@ export function PacotesManager({ pacotes, servicos }: PacotesManagerProps) {
         }
       >
         <form id="form-pacote" onSubmit={handleSubmit} className="flex flex-col gap-4 py-2">
-          <Select
-            label="Serviço"
-            placeholder="Selecione um serviço"
-            value={servicoId}
-            onChange={setServicoId}
+          <SelecaoMultipla
+            label="Serviços"
+            ajuda="Marque um ou mais. As sessões do pacote podem ser usadas em qualquer um deles, intercalando."
+            value={servicoIds}
+            onChange={setServicoIds}
             options={opcoesServico}
           />
           <div className="grid grid-cols-2 gap-4">
@@ -308,7 +311,7 @@ export function PacotesManager({ pacotes, servicos }: PacotesManagerProps) {
         title="Excluir pacote"
         message={
           pacoteParaExcluir
-            ? `Tem certeza que deseja excluir o pacote de ${rotuloSessoes(pacoteParaExcluir.quantidadeSessoes)} de "${pacoteParaExcluir.servicoNome}"? Essa ação não pode ser desfeita.`
+            ? `Tem certeza que deseja excluir o pacote de ${rotuloSessoes(pacoteParaExcluir.quantidadeSessoes)} de "${nomesServicos(pacoteParaExcluir)}"? Essa ação não pode ser desfeita.`
             : ""
         }
         confirmLabel="Excluir"
@@ -322,7 +325,7 @@ export function PacotesManager({ pacotes, servicos }: PacotesManagerProps) {
         title="Desativar pacote"
         message={
           pacoteParaDesativar
-            ? `Tem certeza que deseja desativar o pacote de ${rotuloSessoes(pacoteParaDesativar.quantidadeSessoes)} de "${pacoteParaDesativar.servicoNome}"? Ele deixará de poder ser atribuído a clientes; quem já tem o pacote continua usando.`
+            ? `Tem certeza que deseja desativar o pacote de ${rotuloSessoes(pacoteParaDesativar.quantidadeSessoes)} de "${nomesServicos(pacoteParaDesativar)}"? Ele deixará de poder ser atribuído a clientes; quem já tem o pacote continua usando.`
             : ""
         }
         confirmLabel="Desativar"

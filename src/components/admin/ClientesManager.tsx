@@ -2,7 +2,16 @@
 
 import { useRouter } from "next/navigation";
 import { useMemo, useState, type ChangeEvent, type FormEvent } from "react";
-import { CalendarPlus, ChevronLeft, ChevronRight, MessageCircle, Package, Pencil, Search } from "lucide-react";
+import {
+  CalendarPlus,
+  ChevronLeft,
+  ChevronRight,
+  MessageCircle,
+  Package,
+  Pencil,
+  Search,
+  Trash2,
+} from "lucide-react";
 import { TextField } from "@/components/ui/TextField";
 import { Textarea } from "@/components/ui/Textarea";
 import { Button } from "@/components/ui/Button";
@@ -16,8 +25,11 @@ import {
   ESTILO_BADGE_SITUACAO_PACOTE,
   formatarDataPacote,
   rotuloRestantes,
+  rotuloSessoes,
   SITUACAO_PACOTE_LABEL,
+  nomesServicos,
 } from "@/utils/pacote";
+import { toast } from "@/lib/toast";
 import type { ClienteDetalhe } from "@/types/cliente";
 import type { Pacote, PacoteCliente } from "@/types/pacote";
 import type { Servico } from "@/types/servico";
@@ -41,10 +53,12 @@ export function ClientesManager({ clientes, servicos, pacotes, pacotesPorCliente
   const [atribuirAberto, setAtribuirAberto] = useState(false);
   const [pacoteParaCancelar, setPacoteParaCancelar] = useState<PacoteCliente | null>(null);
   const [pacoteParaEditar, setPacoteParaEditar] = useState<PacoteCliente | null>(null);
+  const [pacoteParaRemover, setPacoteParaRemover] = useState<PacoteCliente | null>(null);
   const [confirmarDesativar, setConfirmarDesativar] = useState(false);
   const { enviando, executar: executarSalvar } = useMutacaoApi();
   const { enviando: desativando, executar: executarAlternar } = useMutacaoApi();
   const { enviando: cancelandoPacote, executar: executarCancelarPacote } = useMutacaoApi();
+  const { enviando: removendoPacote, executar: executarRemoverPacote } = useMutacaoApi();
 
   const filtrados = useMemo(() => {
     const termo = busca.trim().toLowerCase();
@@ -86,6 +100,35 @@ export function ClientesManager({ clientes, servicos, pacotes, pacotesPorCliente
         mensagemErroPadrao: "Não foi possível cancelar o pacote.",
         aoSucesso: () => {
           setPacoteParaCancelar(null);
+          router.refresh();
+        },
+      },
+    );
+  }
+
+  // Com sessões usadas o pacote não pode ser apagado (ele pagou esses
+  // agendamentos); nesse caso só orienta a cancelar.
+  function pedirRemocaoPacote(pacote: PacoteCliente) {
+    if (pacote.sessoesUsadas > 0) {
+      toast.warning(
+        `Esse pacote já tem ${rotuloSessoes(pacote.sessoesUsadas)} usada${pacote.sessoesUsadas === 1 ? "" : "s"} e não pode ser removido.${
+          pacote.ativo ? ' Use "Editar → Cancelar pacote" para impedir novos usos.' : ""
+        }`,
+      );
+      return;
+    }
+    setPacoteParaRemover(pacote);
+  }
+
+  async function confirmarRemocaoPacote() {
+    if (!selecionado || !pacoteParaRemover) return;
+    await executarRemoverPacote(
+      () => fetch(`/api/clientes/${selecionado.id}/pacotes/${pacoteParaRemover.id}`, { method: "DELETE" }),
+      {
+        mensagemSucesso: "Pacote removido.",
+        mensagemErroPadrao: "Não foi possível remover o pacote.",
+        aoSucesso: () => {
+          setPacoteParaRemover(null);
           router.refresh();
         },
       },
@@ -308,7 +351,7 @@ export function ClientesManager({ clientes, servicos, pacotes, pacotesPorCliente
                           className="flex items-start justify-between gap-3 rounded-xl bg-cream-dark px-3 py-2 text-sm"
                         >
                           <div className="min-w-0">
-                            <p className="truncate font-medium text-ink">{pacote.servicoNome}</p>
+                            <p className="font-medium break-words text-ink">{nomesServicos(pacote)}</p>
                             <p className="text-ink-muted">
                               {rotuloRestantes(pacote)} · vence em {formatarDataPacote(pacote.expiraEm)}
                             </p>
@@ -329,6 +372,14 @@ export function ClientesManager({ clientes, servicos, pacotes, pacotesPorCliente
                                 Editar
                               </button>
                             )}
+                            <button
+                              type="button"
+                              onClick={() => pedirRemocaoPacote(pacote)}
+                              className="flex items-center justify-center gap-1 rounded-full bg-input px-2 py-0.5 text-xs font-semibold text-ink transition-colors hover:bg-danger-bg hover:text-danger"
+                            >
+                              <Trash2 size={12} />
+                              Remover
+                            </button>
                           </div>
                         </li>
                       );
@@ -396,7 +447,7 @@ export function ClientesManager({ clientes, servicos, pacotes, pacotesPorCliente
         title="Cancelar pacote"
         message={
           pacoteParaCancelar
-            ? `Tem certeza que deseja cancelar o pacote de "${pacoteParaCancelar.servicoNome}"? As ${pacoteParaCancelar.sessoesRestantes} sessões restantes deixarão de poder ser usadas. Agendamentos já feitos com ele continuam valendo.`
+            ? `Tem certeza que deseja cancelar o pacote de "${nomesServicos(pacoteParaCancelar)}"? As ${pacoteParaCancelar.sessoesRestantes} sessões restantes deixarão de poder ser usadas. Agendamentos já feitos com ele continuam valendo.`
             : ""
         }
         confirmLabel="Cancelar pacote"
@@ -405,6 +456,22 @@ export function ClientesManager({ clientes, servicos, pacotes, pacotesPorCliente
         confirming={cancelandoPacote}
         onConfirm={confirmarCancelamentoPacote}
         onCancel={() => setPacoteParaCancelar(null)}
+      />
+
+      <ConfirmModal
+        open={pacoteParaRemover !== null}
+        title="Remover pacote"
+        message={
+          pacoteParaRemover
+            ? `Tem certeza que deseja remover o pacote de "${nomesServicos(pacoteParaRemover)}" deste cliente? Ele será apagado de vez. Essa ação não pode ser desfeita.`
+            : ""
+        }
+        confirmLabel="Remover"
+        confirmingLabel="Removendo..."
+        cancelLabel="Voltar"
+        confirming={removendoPacote}
+        onConfirm={confirmarRemocaoPacote}
+        onCancel={() => setPacoteParaRemover(null)}
       />
 
       <ConfirmModal

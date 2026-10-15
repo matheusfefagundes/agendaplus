@@ -1,7 +1,11 @@
+export type ServicoDoPacote = {
+  id: string;
+  nome: string;
+};
+
 export type Pacote = {
   id: string;
-  servicoId: string;
-  servicoNome: string;
+  servicos: ServicoDoPacote[];
   quantidadeSessoes: number;
   valor: number;
   validadeDias: number;
@@ -14,14 +18,17 @@ export type SaldoServicoPacote = {
   expiraEm: string;
 };
 
-export type SituacaoPacoteCliente ="ativo" | "esgotado" | "expirado" | "cancelado";
+export type SituacaoPacoteCliente =
+  | "ativo"
+  | "esgotado"
+  | "expirado"
+  | "cancelado";
 
 export type PacoteCliente = {
   id: string;
   clienteId: string;
   pacoteId: string;
-  servicoId: string;
-  servicoNome: string;
+  servicos: ServicoDoPacote[];
   quantidadeSessoes: number;
   sessoesUsadas: number;
   sessoesRestantes: number;

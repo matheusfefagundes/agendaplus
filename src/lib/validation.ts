@@ -3,28 +3,49 @@ import { z } from "zod";
 export const registerSchema = z
   .object({
     nome: z.string().trim().min(2, "Informe seu nome completo.").max(150),
-    email: z.string().trim().toLowerCase().email("Informe um e-mail válido.").max(150),
-    senha: z.string().min(8, "A senha precisa ter pelo menos 8 caracteres.").max(72),
+    email: z
+      .string()
+      .trim()
+      .toLowerCase()
+      .email("Informe um e-mail válido.")
+      .max(150),
+    senha: z
+      .string()
+      .min(8, "A senha precisa ter pelo menos 8 caracteres.")
+      .max(72),
   })
   .strict();
 
 export const loginSchema = z
   .object({
-    email: z.string().trim().toLowerCase().email("Informe um e-mail válido.").max(150),
+    email: z
+      .string()
+      .trim()
+      .toLowerCase()
+      .email("Informe um e-mail válido.")
+      .max(150),
     senha: z.string().min(1, "Informe sua senha.").max(72),
   })
   .strict();
 
 export const solicitarRedefinicaoSenhaSchema = z
   .object({
-    email: z.string().trim().toLowerCase().email("Informe um e-mail válido.").max(150),
+    email: z
+      .string()
+      .trim()
+      .toLowerCase()
+      .email("Informe um e-mail válido.")
+      .max(150),
   })
   .strict();
 
 export const redefinirSenhaSchema = z
   .object({
     token: z.string().regex(/^[a-f0-9]{64}$/i, "Link de redefinição inválido."),
-    novaSenha: z.string().min(8, "A nova senha precisa ter pelo menos 8 caracteres.").max(72),
+    novaSenha: z
+      .string()
+      .min(8, "A nova senha precisa ter pelo menos 8 caracteres.")
+      .max(72),
   })
   .strict();
 
@@ -32,24 +53,42 @@ export const servicoSchema = z
   .object({
     nome: z.string().trim().min(2, "Informe o nome do serviço.").max(150),
     descricao: z.string().trim().max(2000).nullable().optional(),
-    duracaoMinutos: z.number().int().positive("A duração precisa ser maior que zero."),
+    duracaoMinutos: z
+      .number()
+      .int()
+      .positive("A duração precisa ser maior que zero."),
     valor: z.number().nonnegative("O valor não pode ser negativo."),
   })
   .strict();
 
 export const servicoUpdateSchema = z
   .object({
-    nome: z.string().trim().min(2, "Informe o nome do serviço.").max(150).optional(),
+    nome: z
+      .string()
+      .trim()
+      .min(2, "Informe o nome do serviço.")
+      .max(150)
+      .optional(),
     descricao: z.string().trim().max(2000).nullable().optional(),
-    duracaoMinutos: z.number().int().positive("A duração precisa ser maior que zero.").optional(),
+    duracaoMinutos: z
+      .number()
+      .int()
+      .positive("A duração precisa ser maior que zero.")
+      .optional(),
     valor: z.number().nonnegative("O valor não pode ser negativo.").optional(),
     ativo: z.boolean().optional(),
   })
   .strict();
 
+// As sessões do pacote podem ser usadas em qualquer um destes serviços.
+const servicoIdsPacoteSchema = z
+  .array(z.string().uuid("Serviço inválido."))
+  .min(1, "Selecione pelo menos um serviço.")
+  .max(20, "Selecione no máximo 20 serviços.");
+
 export const pacoteSchema = z
   .object({
-    servicoId: z.string().uuid("Serviço inválido."),
+    servicoIds: servicoIdsPacoteSchema,
     quantidadeSessoes: z
       .number()
       .int("A quantidade de sessões precisa ser um número inteiro.")
@@ -66,7 +105,7 @@ export const pacoteSchema = z
 
 export const pacoteUpdateSchema = z
   .object({
-    servicoId: z.string().uuid("Serviço inválido.").optional(),
+    servicoIds: servicoIdsPacoteSchema.optional(),
     quantidadeSessoes: z
       .number()
       .int("A quantidade de sessões precisa ser um número inteiro.")
@@ -98,12 +137,17 @@ export const pacoteClienteUpdateSchema = z
       .positive("A quantidade de sessões precisa ser maior que zero.")
       .max(1000, "A quantidade de sessões é grande demais.")
       .optional(),
-    ativo: z.literal(false, { message: "Só é possível cancelar o pacote." }).optional(),
+    ativo: z
+      .literal(false, { message: "Só é possível cancelar o pacote." })
+      .optional(),
   })
   .strict()
-  .refine((data) => data.quantidadeSessoes !== undefined || data.ativo !== undefined, {
-    message: "Informe o que deseja alterar no pacote.",
-  });
+  .refine(
+    (data) => data.quantidadeSessoes !== undefined || data.ativo !== undefined,
+    {
+      message: "Informe o que deseja alterar no pacote.",
+    },
+  );
 
 export const clienteUpdateSchema = z
   .object({
@@ -116,14 +160,24 @@ export const clienteUpdateSchema = z
 export const perfilSchema = z
   .object({
     nome: z.string().trim().min(2, "Informe seu nome completo.").max(150),
-    email: z.string().trim().toLowerCase().email("Informe um e-mail válido.").max(150),
+    email: z
+      .string()
+      .trim()
+      .toLowerCase()
+      .email("Informe um e-mail válido.")
+      .max(150),
   })
   .strict();
 
 export const clientePerfilSchema = z
   .object({
     nome: z.string().trim().min(2, "Informe seu nome completo.").max(150),
-    email: z.string().trim().toLowerCase().email("Informe um e-mail válido.").max(150),
+    email: z
+      .string()
+      .trim()
+      .toLowerCase()
+      .email("Informe um e-mail válido.")
+      .max(150),
     telefone: z.string().trim().max(20).nullable().optional(),
   })
   .strict();
@@ -133,7 +187,10 @@ export const senhaSchema = z
     // Opcional: contas criadas pelo Google ainda não têm senha (o serviço exige
     // a senha atual quando ela existe).
     senhaAtual: z.string().max(72).optional(),
-    novaSenha: z.string().min(8, "A nova senha precisa ter pelo menos 8 caracteres.").max(72),
+    novaSenha: z
+      .string()
+      .min(8, "A nova senha precisa ter pelo menos 8 caracteres.")
+      .max(72),
   })
   .strict();
 
@@ -142,7 +199,9 @@ const HORA_REGEX = /^([01]\d|2[0-3]):[0-5]\d$/;
 export const horarioSchema = z
   .object({
     diaSemana: z.number().int().min(0, "Selecione um dia da semana.").max(6),
-    horaInicio: z.string().regex(HORA_REGEX, "Informe um horário válido (HH:MM)."),
+    horaInicio: z
+      .string()
+      .regex(HORA_REGEX, "Informe um horário válido (HH:MM)."),
     horaFim: z.string().regex(HORA_REGEX, "Informe um horário válido (HH:MM)."),
     intervaloMinutos: z.number().int().min(0).max(240),
   })
@@ -154,8 +213,14 @@ export const horarioSchema = z
 
 export const horarioUpdateSchema = z
   .object({
-    horaInicio: z.string().regex(HORA_REGEX, "Informe um horário válido (HH:MM).").optional(),
-    horaFim: z.string().regex(HORA_REGEX, "Informe um horário válido (HH:MM).").optional(),
+    horaInicio: z
+      .string()
+      .regex(HORA_REGEX, "Informe um horário válido (HH:MM).")
+      .optional(),
+    horaFim: z
+      .string()
+      .regex(HORA_REGEX, "Informe um horário válido (HH:MM).")
+      .optional(),
     intervaloMinutos: z.number().int().min(0).max(240).optional(),
     ativo: z.boolean().optional(),
   })
