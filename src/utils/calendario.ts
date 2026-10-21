@@ -1,4 +1,8 @@
-import { dataLocalBrasil, formatarHoraDeMinutos, minutosDoDiaBrasil } from "@/utils/data";
+import {
+  dataLocalBrasil,
+  formatarHoraDeMinutos,
+  minutosDoDiaBrasil,
+} from "@/utils/data";
 
 const NOME_LOCAL = "Espaço Patrícia Fagundes";
 const LIMITE_OCTETOS_LINHA = 75;
@@ -83,7 +87,9 @@ export function gerarConteudoICS(evento: EventoCalendario): string {
     "STATUS:CONFIRMED",
     `SUMMARY:${titulo}`,
     `LOCATION:${escaparTexto(NOME_LOCAL)}`,
-    evento.observacoes ? `DESCRIPTION:${escaparTexto(evento.observacoes)}` : null,
+    evento.observacoes
+      ? `DESCRIPTION:${escaparTexto(evento.observacoes)}`
+      : null,
     "BEGIN:VALARM",
     "ACTION:DISPLAY",
     `DESCRIPTION:${titulo}`,
@@ -98,7 +104,9 @@ export function gerarConteudoICS(evento: EventoCalendario): string {
 
 export function nomeArquivoICS(evento: EventoCalendario): string {
   const data = dataLocalBrasil(evento.dataHoraInicio);
-  const hora = formatarHoraDeMinutos(minutosDoDiaBrasil(evento.dataHoraInicio)).replace(":", "");
+  const hora = formatarHoraDeMinutos(
+    minutosDoDiaBrasil(evento.dataHoraInicio),
+  ).replace(":", "");
   return `agendamento-${data}-${hora}.ics`;
 }
 
@@ -110,7 +118,10 @@ export function urlCalendarioAgendamento(agendamentoId: string): string {
 // computador) o navegador só baixaria o arquivo, então usamos o Google Agenda.
 function ehDispositivoApple(): boolean {
   const { userAgent, maxTouchPoints } = window.navigator;
-  return /iPad|iPhone|iPod/.test(userAgent) || (/Macintosh/.test(userAgent) && maxTouchPoints > 1);
+  return (
+    /iPad|iPhone|iPod/.test(userAgent) ||
+    (/Macintosh/.test(userAgent) && maxTouchPoints > 1)
+  );
 }
 
 // Só no cliente. Retorna false quando o navegador bloqueou a nova aba.

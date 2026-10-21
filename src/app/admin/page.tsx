@@ -1,11 +1,42 @@
-import { CalendarClock } from "lucide-react";
-import { obterSessao } from "@/lib/auth";
 import {
+  CalendarCheck2,
+  CalendarClock,
+  CalendarRange,
+  CalendarX2,
+  Receipt,
+  UserRoundPlus,
+  Wallet,
+} from "lucide-react";
+import dynamic from "next/dynamic";
+import { obterSessao } from "@/lib/auth";
+import CartaoMetrica from "@/components/admin/dashboard/CartaoMetrica";
+import EsqueletoGrafico from "@/components/admin/dashboard/EsqueletoGrafico";
+import {
+  obterAgendamentosPorStatusMes,
+  obterFaturamentoDiario,
   obterNomeUsuario,
   obterProximosAgendamentos,
   obterResumoDashboard,
+  obterServicosMaisVendidosMes,
 } from "@/services/dashboard.service";
-import { formatarHorario, formatarMoeda } from "@/utils/formatters";
+import {
+  formatarHorario,
+  formatarMoeda,
+  formatarPercentual,
+} from "@/utils/formatters";
+
+const GraficoFaturamento = dynamic(
+  () => import("@/components/admin/dashboard/GraficoFaturamento"),
+  { loading: () => <EsqueletoGrafico altura={256} /> },
+);
+const GraficoStatusAgendamentos = dynamic(
+  () => import("@/components/admin/dashboard/GraficoStatusAgendamentos"),
+  { loading: () => <EsqueletoGrafico altura={192} /> },
+);
+const GraficoServicosMaisVendidos = dynamic(
+  () => import("@/components/admin/dashboard/GraficoServicosMaisVendidos"),
+  { loading: () => <EsqueletoGrafico altura={180} /> },
+);
 
 function saudacao(): string {
   const hora = new Date().getHours();
@@ -16,11 +47,15 @@ function saudacao(): string {
 
 export default async function AdminDashboardPage() {
   const sessao = await obterSessao();
-  const [nome, resumo, proximos] = await Promise.all([
-    sessao ? obterNomeUsuario(sessao.sub) : null,
-    obterResumoDashboard(),
-    obterProximosAgendamentos(),
-  ]);
+  const [nome, resumo, proximos, faturamentoDiario, statusMes, servicosMes] =
+    await Promise.all([
+      sessao ? obterNomeUsuario(sessao.sub) : null,
+      obterResumoDashboard(),
+      obterProximosAgendamentos(),
+      obterFaturamentoDiario(14),
+      obterAgendamentosPorStatusMes(),
+      obterServicosMaisVendidosMes(),
+    ]);
 
   const primeiroNome = nome?.split(" ")[0] ?? "";
 
@@ -31,24 +66,53 @@ export default async function AdminDashboardPage() {
           {saudacao()}
           {primeiroNome ? `, ${primeiroNome}.` : "."}
         </h1>
-        <p className="mt-1 text-ink-muted">Aqui está o resumo da sua clínica hoje.</p>
+        <p className="mt-1 text-ink-muted">
+          Aqui está o resumo da sua clínica hoje.
+        </p>
       </header>
 
-      <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="rounded-3xl bg-cream-dark p-6">
-          <p className="text-sm text-ink-muted">Atendimentos Hoje</p>
-          <p className="mt-2 text-3xl font-extrabold text-ink">{resumo.atendimentosHoje}</p>
-        </div>
-        <div className="rounded-3xl bg-cream-dark p-6">
-          <p className="text-sm text-ink-muted">Novos Clientes (semana)</p>
-          <p className="mt-2 text-3xl font-extrabold text-ink">{resumo.novosClientesSemana}</p>
-        </div>
-        <div className="rounded-3xl bg-cream-dark p-6">
-          <p className="text-sm text-ink-muted">Faturamento Semanal</p>
-          <p className="mt-2 text-3xl font-extrabold text-ink">
-            {formatarMoeda(resumo.faturamentoSemana)}
-          </p>
-        </div>
+      <section className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+        <CartaoMetrica
+          icone={CalendarCheck2}
+          label="Atendimentos Hoje"
+          valor={String(resumo.atendimentosHoje)}
+        />
+        <CartaoMetrica
+          icone={CalendarRange}
+          label="Atendimentos no Mês"
+          valor={String(resumo.atendimentosMes)}
+        />
+        <CartaoMetrica
+          icone={UserRoundPlus}
+          label="Novos Clientes"
+          valor={String(resumo.novosClientesSemana)}
+          descricao="Na semana"
+        />
+        <CartaoMetrica
+          icone={Wallet}
+          label="Faturamento"
+          valor={formatarMoeda(resumo.faturamentoSemana)}
+          descricao="Na semana"
+        />
+        <CartaoMetrica
+          icone={Receipt}
+          label="Ticket Médio"
+          valor={formatarMoeda(resumo.ticketMedioMes)}
+          descricao="No mês"
+        />
+        <CartaoMetrica
+          icone={CalendarX2}
+          label="Cancelamento"
+          valor={formatarPercentual(resumo.taxaCancelamentoMes)}
+          descricao="No mês"
+        />
+      </section>
+
+      <GraficoFaturamento dados={faturamentoDiario} />
+
+      <section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <GraficoStatusAgendamentos dados={statusMes} />
+        <GraficoServicosMaisVendidos dados={servicosMes} />
       </section>
 
       <section className="rounded-3xl bg-cream-dark p-6">
@@ -68,8 +132,12 @@ export default async function AdminDashboardPage() {
                     <CalendarClock size={18} />
                   </div>
                   <div>
-                    <p className="font-medium text-ink">{agendamento.clienteNome}</p>
-                    <p className="text-sm text-ink-muted">{agendamento.servicoNome}</p>
+                    <p className="font-medium text-ink">
+                      {agendamento.clienteNome}
+                    </p>
+                    <p className="text-sm text-ink-muted">
+                      {agendamento.servicoNome}
+                    </p>
                   </div>
                 </div>
                 <span className="text-sm font-medium text-ink-muted">

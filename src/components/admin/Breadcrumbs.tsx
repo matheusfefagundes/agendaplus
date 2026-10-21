@@ -9,7 +9,10 @@ function rotuloAtual(pathname: string): string {
   if (item) return item.label;
 
   const ultimoSegmento = pathname.split("/").filter(Boolean).pop() ?? "";
-  return ultimoSegmento.charAt(0).toUpperCase() + ultimoSegmento.slice(1).replace(/-/g, " ");
+  return (
+    ultimoSegmento.charAt(0).toUpperCase() +
+    ultimoSegmento.slice(1).replace(/-/g, " ")
+  );
 }
 
 export function Breadcrumbs() {
@@ -18,7 +21,10 @@ export function Breadcrumbs() {
 
   return (
     <BreadcrumbsBase
-      items={[{ label: "Dashboard", href: "/admin" }, { label: rotuloAtual(pathname) }]}
+      items={[
+        { label: "Dashboard", href: "/admin" },
+        { label: rotuloAtual(pathname) },
+      ]}
     />
   );
 }

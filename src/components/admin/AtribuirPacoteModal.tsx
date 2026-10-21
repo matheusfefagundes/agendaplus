@@ -29,7 +29,8 @@ export function AtribuirPacoteModal({
   const [pacoteId, setPacoteId] = useState("");
   const { enviando, executar } = useMutacaoApi();
 
-  const pacoteSelecionado = pacotes.find((pacote) => pacote.id === pacoteId) ?? null;
+  const pacoteSelecionado =
+    pacotes.find((pacote) => pacote.id === pacoteId) ?? null;
 
   function fechar() {
     setPacoteId("");
@@ -87,33 +88,46 @@ export function AtribuirPacoteModal({
     >
       {pacotes.length === 0 ? (
         <p className="text-ink-muted">
-          Não há pacotes ativos. Cadastre um em Pacotes antes de atribuir a um cliente.
+          Não há pacotes ativos. Cadastre um em Pacotes antes de atribuir a um
+          cliente.
         </p>
       ) : (
-        <form id="form-atribuir-pacote" onSubmit={handleSubmit} className="flex flex-col gap-4 py-2">
+        <form
+          id="form-atribuir-pacote"
+          onSubmit={handleSubmit}
+          className="flex flex-col gap-4 py-2"
+        >
           <Select
             label="Pacote"
             placeholder="Selecione um pacote"
             value={pacoteId}
             onChange={setPacoteId}
-            options={pacotes.map((pacote) => ({ value: pacote.id, label: rotuloPacote(pacote) }))}
+            options={pacotes.map((pacote) => ({
+              value: pacote.id,
+              label: rotuloPacote(pacote),
+            }))}
           />
 
           {pacoteSelecionado && (
             <dl className="grid grid-cols-2 gap-3 rounded-2xl bg-cream-dark p-4 text-sm">
               <div>
                 <dt className="text-ink-muted">Valor</dt>
-                <dd className="font-semibold text-ink">{formatarMoeda(pacoteSelecionado.valor)}</dd>
+                <dd className="font-semibold text-ink">
+                  {formatarMoeda(pacoteSelecionado.valor)}
+                </dd>
               </div>
               <div>
                 <dt className="text-ink-muted">Validade</dt>
-                <dd className="font-semibold text-ink">{pacoteSelecionado.validadeDias} dias</dd>
+                <dd className="font-semibold text-ink">
+                  {pacoteSelecionado.validadeDias} dias
+                </dd>
               </div>
             </dl>
           )}
 
           <p className="text-sm text-ink-muted">
-            O pagamento é combinado fora do sistema. A validade começa a contar a partir de hoje.
+            O pagamento é combinado fora do sistema. A validade começa a contar
+            a partir de hoje.
           </p>
         </form>
       )}

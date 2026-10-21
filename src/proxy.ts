@@ -29,14 +29,19 @@ function limparCookieSessao(response: NextResponse): void {
 }
 
 function redirecionarSessaoExpirada(request: NextRequest): NextResponse {
-  const response = NextResponse.redirect(new URL(ROTA_LOGIN_SESSAO_EXPIRADA, request.url));
+  const response = NextResponse.redirect(
+    new URL(ROTA_LOGIN_SESSAO_EXPIRADA, request.url),
+  );
   limparCookieSessao(response);
   return response;
 }
 
 // Quem volta ao app abrindo /login (ou / que redireciona pra cá) com um token
 // vencido também precisa ver o aviso de sessão expirada.
-async function tratarLogin(request: NextRequest, token: string | undefined): Promise<NextResponse> {
+async function tratarLogin(
+  request: NextRequest,
+  token: string | undefined,
+): Promise<NextResponse> {
   if (!token) return NextResponse.next();
 
   try {
@@ -44,7 +49,10 @@ async function tratarLogin(request: NextRequest, token: string | undefined): Pro
   } catch (error) {
     if (error instanceof errors.JWTExpired) {
       // Com o parâmetro já na URL não redireciona de novo (evita loop) e só limpa o cookie
-      if (request.nextUrl.searchParams.get(PARAM_SESSAO_EXPIRADA) === VALOR_SESSAO_EXPIRADA) {
+      if (
+        request.nextUrl.searchParams.get(PARAM_SESSAO_EXPIRADA) ===
+        VALOR_SESSAO_EXPIRADA
+      ) {
         const response = NextResponse.next();
         limparCookieSessao(response);
         return response;

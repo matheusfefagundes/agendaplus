@@ -4,10 +4,14 @@ import { obterSessao } from "@/lib/auth";
 import { SideNavBar } from "@/components/admin/SideNavBar";
 import { Breadcrumbs } from "@/components/admin/Breadcrumbs";
 
-export default async function AdminLayout({ children }: { children: ReactNode }) {
+export default async function AdminLayout({
+  children,
+}: {
+  children: ReactNode;
+}) {
   const sessao = await obterSessao();
 
-  // Segunda camada de verificação além do middleware 
+  // Segunda camada de verificação além do middleware
   if (!sessao || sessao.role !== "admin") {
     redirect("/login");
   }

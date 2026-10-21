@@ -9,7 +9,11 @@ import { DatePicker } from "@/components/ui/DatePicker";
 import { Select } from "@/components/ui/Select";
 import { useMutacaoApi } from "@/hooks/useMutacaoApi";
 import { hojeEmSaoPauloISO } from "@/utils/data";
-import { calcularSaldoPorServico, formatarDataPacote, rotuloSessoes } from "@/utils/pacote";
+import {
+  calcularSaldoPorServico,
+  formatarDataPacote,
+  rotuloSessoes,
+} from "@/utils/pacote";
 import type { PacoteCliente } from "@/types/pacote";
 import type { Servico } from "@/types/servico";
 
@@ -38,7 +42,9 @@ export function AgendarModal({
   const { enviando: buscando, executar: executarBusca } = useMutacaoApi();
   const { enviando: salvando, executar: executarCriar } = useMutacaoApi();
 
-  const saldoDoServico = calcularSaldoPorServico(pacotesDoCliente).find((s) => s.servicoId === servicoId);
+  const saldoDoServico = calcularSaldoPorServico(pacotesDoCliente).find(
+    (s) => s.servicoId === servicoId,
+  );
 
   async function buscarHorarios(novoServicoId: string, novaData: string) {
     setHorario("");
@@ -46,7 +52,8 @@ export function AgendarModal({
     if (!novoServicoId || !novaData) return;
 
     await executarBusca(
-      () => fetch(`/api/agendamentos?data=${novaData}&servicoId=${novoServicoId}`),
+      () =>
+        fetch(`/api/agendamentos?data=${novaData}&servicoId=${novoServicoId}`),
       {
         mensagemErroPadrao: "Não foi possível buscar horários.",
         aoSucesso: (resposta) => {
@@ -68,14 +75,21 @@ export function AgendarModal({
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-    const observacoes = String(formData.get("observacoes") ?? "").trim() || null;
+    const observacoes =
+      String(formData.get("observacoes") ?? "").trim() || null;
 
     await executarCriar(
       () =>
         fetch("/api/agendamentos", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ clienteId, servicoId, data, horario, observacoes }),
+          body: JSON.stringify({
+            clienteId,
+            servicoId,
+            data,
+            horario,
+            observacoes,
+          }),
         }),
       {
         mensagemSucesso: "Agendamento criado.",
@@ -115,7 +129,11 @@ export function AgendarModal({
         </div>
       }
     >
-      <form id="form-agendar" onSubmit={handleSubmit} className="flex flex-col gap-4 py-2">
+      <form
+        id="form-agendar"
+        onSubmit={handleSubmit}
+        className="flex flex-col gap-4 py-2"
+      >
         <Select
           id="servicoId"
           label="Serviço"
@@ -133,8 +151,10 @@ export function AgendarModal({
 
         {saldoDoServico && (
           <p className="rounded-2xl bg-cream-dark px-4 py-3 text-sm text-ink">
-            Este cliente tem pacote deste serviço: {rotuloSessoes(saldoDoServico.sessoesRestantes)} restantes
-            (vence em {formatarDataPacote(saldoDoServico.expiraEm)}). Esta sessão será descontada do pacote.
+            Este cliente tem pacote deste serviço:{" "}
+            {rotuloSessoes(saldoDoServico.sessoesRestantes)} restantes (vence em{" "}
+            {formatarDataPacote(saldoDoServico.expiraEm)}). Esta sessão será
+            descontada do pacote.
           </p>
         )}
 
@@ -154,9 +174,13 @@ export function AgendarModal({
           {buscando ? (
             <p className="text-sm text-ink-muted">Buscando horários...</p>
           ) : !servicoId || !data ? (
-            <p className="text-sm text-ink-muted">Selecione o serviço e a data.</p>
+            <p className="text-sm text-ink-muted">
+              Selecione o serviço e a data.
+            </p>
           ) : horariosDisponiveis.length === 0 ? (
-            <p className="text-sm text-ink-muted">Nenhum horário disponível nesse dia.</p>
+            <p className="text-sm text-ink-muted">
+              Nenhum horário disponível nesse dia.
+            </p>
           ) : (
             <div className="flex flex-wrap gap-2">
               {horariosDisponiveis.map((h) => (
@@ -177,7 +201,12 @@ export function AgendarModal({
           )}
         </div>
 
-        <Textarea id="observacoes" name="observacoes" label="Observações (opcional)" rows={3} />
+        <Textarea
+          id="observacoes"
+          name="observacoes"
+          label="Observações (opcional)"
+          rows={3}
+        />
       </form>
     </Modal>
   );

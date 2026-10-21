@@ -1,4 +1,9 @@
-import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
+import {
+  createCipheriv,
+  createDecipheriv,
+  createHash,
+  randomBytes,
+} from "node:crypto";
 
 const ALGORITMO = "aes-256-gcm";
 
@@ -18,8 +23,12 @@ export function cifrar(texto: string): string {
 }
 
 export function decifrar(valor: string): string {
-  const [iv, tag, dados] = valor.split(".").map((parte) => Buffer.from(parte, "base64"));
+  const [iv, tag, dados] = valor
+    .split(".")
+    .map((parte) => Buffer.from(parte, "base64"));
   const decifra = createDecipheriv(ALGORITMO, chave(), iv);
   decifra.setAuthTag(tag);
-  return Buffer.concat([decifra.update(dados), decifra.final()]).toString("utf8");
+  return Buffer.concat([decifra.update(dados), decifra.final()]).toString(
+    "utf8",
+  );
 }

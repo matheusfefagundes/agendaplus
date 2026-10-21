@@ -14,3 +14,14 @@ export function formatarHorario(iso: string): string {
 export function formatarHoraCurta(hora: string): string {
   return hora.slice(0, 5);
 }
+
+export function formatarPercentual(valor: number): string {
+  return `${valor.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`;
+}
+
+export function formatarDataCurta(data: string): string {
+  return new Date(`${data}T00:00:00`).toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+  });
+}

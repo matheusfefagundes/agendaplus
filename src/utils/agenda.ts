@@ -1,11 +1,18 @@
 import { dataLocalBrasil } from "@/utils/data";
-import type { AgendamentoDetalhe, StatusAgendamento } from "@/types/agendamento";
+import type {
+  AgendamentoDetalhe,
+  StatusAgendamento,
+} from "@/types/agendamento";
 
 // A agenda do admin não mostra cancelados.
 export type StatusAgenda = Exclude<StatusAgendamento, "cancelado">;
 export type FiltroAgenda = "todos" | StatusAgenda;
 
-export const STATUS_AGENDA: StatusAgenda[] = ["pendente", "confirmado", "concluido"];
+export const STATUS_AGENDA: StatusAgenda[] = [
+  "pendente",
+  "confirmado",
+  "concluido",
+];
 
 export const ROTULO_STATUS: Record<StatusAgendamento, string> = {
   pendente: "Pendente",
@@ -20,7 +27,9 @@ export const ROTULO_STATUS_PLURAL: Record<StatusAgenda, string> = {
   concluido: "Concluídos",
 };
 
-export function agruparPorDia(agendamentos: AgendamentoDetalhe[]): Map<string, AgendamentoDetalhe[]> {
+export function agruparPorDia(
+  agendamentos: AgendamentoDetalhe[],
+): Map<string, AgendamentoDetalhe[]> {
   const mapa = new Map<string, AgendamentoDetalhe[]>();
   for (const agendamento of agendamentos) {
     const dia = dataLocalBrasil(agendamento.dataHoraInicio);

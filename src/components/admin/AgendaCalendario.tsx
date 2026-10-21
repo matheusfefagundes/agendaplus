@@ -9,9 +9,23 @@ import { ProximosCompromissos } from "@/components/admin/agenda/ProximosCompromi
 import { DetalheAgendamentoModal } from "@/components/admin/agenda/DetalheAgendamentoModal";
 import { ESTILO_STATUS } from "@/components/admin/agenda/estiloStatus";
 import { useMutacaoApi } from "@/hooks/useMutacaoApi";
-import { adicionarMeses, dataLocalBrasil, diasDaGradeDoMes, formatarMesAno, mesDaData } from "@/utils/data";
-import { agruparPorDia, ROTULO_STATUS_PLURAL, STATUS_AGENDA, type FiltroAgenda } from "@/utils/agenda";
-import type { AgendamentoDetalhe, StatusAgendamento } from "@/types/agendamento";
+import {
+  adicionarMeses,
+  dataLocalBrasil,
+  diasDaGradeDoMes,
+  formatarMesAno,
+  mesDaData,
+} from "@/utils/data";
+import {
+  agruparPorDia,
+  ROTULO_STATUS_PLURAL,
+  STATUS_AGENDA,
+  type FiltroAgenda,
+} from "@/utils/agenda";
+import type {
+  AgendamentoDetalhe,
+  StatusAgendamento,
+} from "@/types/agendamento";
 
 type AgendaCalendarioProps = {
   mes: string;
@@ -24,13 +38,20 @@ function diaInicial(mes: string, hoje: string): string | null {
   return mesDaData(hoje) === mes ? hoje : null;
 }
 
-export function AgendaCalendario({ mes, hoje, agendamentos, proximos }: AgendaCalendarioProps) {
+export function AgendaCalendario({
+  mes,
+  hoje,
+  agendamentos,
+  proximos,
+}: AgendaCalendarioProps) {
   const router = useRouter();
   const painelRef = useRef<HTMLElement>(null);
   const { enviando, executar } = useMutacaoApi();
   const [filtro, setFiltro] = useState<FiltroAgenda>("todos");
   const [aberto, setAberto] = useState<AgendamentoDetalhe | null>(null);
-  const [diaSelecionado, setDiaSelecionado] = useState<string | null>(() => diaInicial(mes, hoje));
+  const [diaSelecionado, setDiaSelecionado] = useState<string | null>(() =>
+    diaInicial(mes, hoje),
+  );
 
   // Ao trocar de mês, volta a seleção para hoje (se estiver no mês) — ajuste
   // de state durante o render, não em efeito.
@@ -42,22 +63,33 @@ export function AgendaCalendario({ mes, hoje, agendamentos, proximos }: AgendaCa
 
   const dias = useMemo(() => diasDaGradeDoMes(mes), [mes]);
   const filtrados = useMemo(
-    () => (filtro === "todos" ? agendamentos : agendamentos.filter((a) => a.status === filtro)),
+    () =>
+      filtro === "todos"
+        ? agendamentos
+        : agendamentos.filter((a) => a.status === filtro),
     [agendamentos, filtro],
   );
-  const agendamentosPorDia = useMemo(() => agruparPorDia(filtrados), [filtrados]);
+  const agendamentosPorDia = useMemo(
+    () => agruparPorDia(filtrados),
+    [filtrados],
+  );
 
   const contagemDoMes = useMemo(() => {
     const contagem: Record<string, number> = {};
     for (const agendamento of agendamentos) {
-      if (mesDaData(dataLocalBrasil(agendamento.dataHoraInicio)) !== mes) continue;
+      if (mesDaData(dataLocalBrasil(agendamento.dataHoraInicio)) !== mes)
+        continue;
       contagem[agendamento.status] = (contagem[agendamento.status] ?? 0) + 1;
     }
     return contagem;
   }, [agendamentos, mes]);
 
   function irParaMes(novoMes: string) {
-    router.push(novoMes === mesDaData(hoje) ? "/admin/agenda" : `/admin/agenda?mes=${novoMes}`);
+    router.push(
+      novoMes === mesDaData(hoje)
+        ? "/admin/agenda"
+        : `/admin/agenda?mes=${novoMes}`,
+    );
   }
 
   function irParaHoje() {
@@ -72,7 +104,12 @@ export function AgendaCalendario({ mes, hoje, agendamentos, proximos }: AgendaCa
     setDiaSelecionado(dia);
     // No celular o painel do dia fica abaixo do calendário: rola até ele.
     if (window.matchMedia("(max-width: 1023px)").matches) {
-      requestAnimationFrame(() => painelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+      requestAnimationFrame(() =>
+        painelRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        }),
+      );
     }
   }
 
@@ -85,7 +122,10 @@ export function AgendaCalendario({ mes, hoje, agendamentos, proximos }: AgendaCa
           body: JSON.stringify({ status }),
         }),
       {
-        mensagemSucesso: status === "cancelado" ? "Agendamento cancelado." : "Agendamento atualizado.",
+        mensagemSucesso:
+          status === "cancelado"
+            ? "Agendamento cancelado."
+            : "Agendamento atualizado.",
         mensagemErroPadrao: "Não foi possível atualizar o agendamento.",
         aoSucesso: () => {
           setAberto(null);
@@ -97,7 +137,10 @@ export function AgendaCalendario({ mes, hoje, agendamentos, proximos }: AgendaCa
 
   const opcoesFiltro: { valor: FiltroAgenda; rotulo: string }[] = [
     { valor: "todos", rotulo: "Tudo" },
-    ...STATUS_AGENDA.map((status) => ({ valor: status, rotulo: ROTULO_STATUS_PLURAL[status] })),
+    ...STATUS_AGENDA.map((status) => ({
+      valor: status,
+      rotulo: ROTULO_STATUS_PLURAL[status],
+    })),
   ];
 
   return (
@@ -155,9 +198,13 @@ export function AgendaCalendario({ mes, hoje, agendamentos, proximos }: AgendaCa
         <ul className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-ink-muted">
           {STATUS_AGENDA.map((status) => (
             <li key={status} className="flex items-center gap-1.5">
-              <span className={`size-2 rounded-full ${ESTILO_STATUS[status].ponto}`} />
+              <span
+                className={`size-2 rounded-full ${ESTILO_STATUS[status].ponto}`}
+              />
               {ROTULO_STATUS_PLURAL[status]}
-              <span className="font-bold text-ink">{contagemDoMes[status] ?? 0}</span>
+              <span className="font-bold text-ink">
+                {contagemDoMes[status] ?? 0}
+              </span>
             </li>
           ))}
         </ul>
@@ -183,7 +230,10 @@ export function AgendaCalendario({ mes, hoje, agendamentos, proximos }: AgendaCa
             aoAbrirAgendamento={setAberto}
           />
         )}
-        <ProximosCompromissos agendamentos={proximos} aoAbrirAgendamento={setAberto} />
+        <ProximosCompromissos
+          agendamentos={proximos}
+          aoAbrirAgendamento={setAberto}
+        />
       </aside>
 
       <DetalheAgendamentoModal
