@@ -8,7 +8,7 @@ import {
 
 export async function POST(request: NextRequest) {
   const ip = getClientIp(request);
-  if (!checkRateLimit(`redefinir-senha:${ip}`, 10, 15 * 60 * 1000)) {
+  if (!(await checkRateLimit(`redefinir-senha:${ip}`, 10, 15 * 60 * 1000))) {
     return NextResponse.json({ error: "Muitas tentativas. Tente novamente mais tarde." }, { status: 429 });
   }
 

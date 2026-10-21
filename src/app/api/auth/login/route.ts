@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
   }
 
   const ip = getClientIp(request);
-  if (!checkRateLimit(`login:${ip}:${parsed.data.email}`)) {
+  if (!(await checkRateLimit(`login:${ip}:${parsed.data.email}`))) {
     return NextResponse.json(
       { error: "Muitas tentativas. Tente novamente mais tarde." },
       { status: 429 },

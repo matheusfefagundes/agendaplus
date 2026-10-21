@@ -17,7 +17,10 @@ if (!connectionString) {
 
 try {
   const executadas = await runner({
-    databaseUrl: { connectionString, ssl: { rejectUnauthorized: false } },
+    databaseUrl: {
+      connectionString,
+      ssl: { rejectUnauthorized: process.env.DATABASE_SSL_INSECURE !== "true" },
+    },
     dir: "src/db/migrations",
     direction: "up",
     migrationsTable: "pgmigrations",

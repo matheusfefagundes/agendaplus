@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
   if (!sessao) return NextResponse.json({ error: "Não autorizado." }, { status: 401 });
 
   const ip = getClientIp(request);
-  if (!checkRateLimit(`senha:${ip}:${sessao.sub}`)) {
+  if (!(await checkRateLimit(`senha:${ip}:${sessao.sub}`))) {
     return NextResponse.json(
       { error: "Muitas tentativas. Tente novamente mais tarde." },
       { status: 429 },

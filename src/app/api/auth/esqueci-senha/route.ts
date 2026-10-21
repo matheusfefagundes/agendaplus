@@ -16,8 +16,10 @@ export async function POST(request: NextRequest) {
   }
 
   const ip = getClientIp(request);
-  const limitePorIpOk = checkRateLimit(`esqueci-senha:${ip}`, 5, 15 * 60 * 1000);
-  const limitePorEmailOk = checkRateLimit(`esqueci-senha-email:${parsed.data.email}`, 5, 15 * 60 * 1000);
+  const [limitePorIpOk, limitePorEmailOk] = await Promise.all([
+    checkRateLimit(`esqueci-senha:${ip}`, 5, 15 * 60 * 1000),
+    checkRateLimit(`esqueci-senha-email:${parsed.data.email}`, 5, 15 * 60 * 1000),
+  ]);
   if (!limitePorIpOk || !limitePorEmailOk) {
     return NextResponse.json({ error: "Muitas tentativas. Tente novamente mais tarde." }, { status: 429 });
   }

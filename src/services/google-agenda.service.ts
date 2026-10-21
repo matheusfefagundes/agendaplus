@@ -66,12 +66,18 @@ async function obterAccessToken(): Promise<string | null> {
   const refreshToken = result.rows[0]?.refresh_token;
   if (!refreshToken) return null;
 
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+  if (!clientId || !clientSecret) {
+    throw new Error("Google Agenda não configurado: defina GOOGLE_CLIENT_ID e GOOGLE_CLIENT_SECRET.");
+  }
+
   const resposta = await fetch(URL_TOKEN, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({
-      client_id: process.env.GOOGLE_CLIENT_ID ?? "",
-      client_secret: process.env.GOOGLE_CLIENT_SECRET ?? "",
+      client_id: clientId,
+      client_secret: clientSecret,
       refresh_token: decifrar(refreshToken),
       grant_type: "refresh_token",
     }),
